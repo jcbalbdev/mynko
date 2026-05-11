@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "680348961609",
+    "project_id": "mynko-25254",
+    "storage_bucket": "mynko-25254.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:680348961609:android:acb9e2d73cdb7e7a5ae898",
+        "android_client_info": {
+          "package_name": "com.mynko.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDeuyUVKX7LfTYOcKbVtwkA2usdN88LbT8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,44 @@
+/* ══════════════════════════════════════
+   PROFILE SHEET
+══════════════════════════════════════ */
+
+.profile-sheet-body { padding: 0 var(--space-md) 24px; flex-direction: column; align-items: center; gap: 16px; display: flex; }
+.profile-avatar-lg { color: #fff; width: 72px; height: 72px; font-size: 30px; font-weight: 900; font-family: var(--font); background: #111214; border-radius: 50%; justify-content: center; align-items: center; margin-bottom: 4px; display: flex; }
+.profile-info-group { border-radius: var(--radius-xl); background: var(--bg-secondary); width: 100%; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
+.profile-info-row { align-items: center; gap: 12px; padding: 14px 16px; display: flex; }
+.profile-info-divider { background: var(--separator); height: 0.5px; margin: 0 16px; }
+.profile-info-icon { width: 28px; height: 28px; color: var(--label-secondary); flex-shrink: 0; justify-content: center; align-items: center; display: flex; }
+.profile-info-inner { flex-direction: column; gap: 2px; min-width: 0; display: flex; }
+.profile-info-label { color: var(--label-tertiary); text-transform: uppercase; letter-spacing: 0.4px; font-size: 11px; font-weight: 700; }
+.profile-info-value { color: var(--label-primary); white-space: nowrap; text-overflow: ellipsis; font-size: 14px; font-weight: 600; overflow: hidden; }
+.profile-signout-btn { color: #ff3b30; border-radius: var(--radius-xl); width: 100%; font-family: var(--font); cursor: pointer; letter-spacing: 0.1px; background: rgba(255,59,48,.08); border: none; padding: 15px; font-size: 15px; font-weight: 800; transition: background 0.15s, transform 0.12s; }
+.profile-signout-btn:active { background: rgba(255,59,48,.14); transform: scale(0.97); }
+.profile-tabs { display: flex; gap: 4px; background: rgba(0,0,0,.05); border-radius: 12px; padding: 4px; margin: 0 16px 20px; }
+.profile-tab { flex: 1; padding: 8px 0; border-radius: 9px; font-size: 14px; font-weight: 600; color: rgba(0,0,0,.4); background: transparent; border: none; cursor: pointer; transition: all 0.2s ease; }
+.profile-tab.active { background: #fff; color: #000; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+.profile-setting-group { flex-direction: column; gap: 6px; width: 100%; display: flex; }
+.profile-setting-label { color: var(--label-tertiary); text-transform: uppercase; letter-spacing: 0.5px; padding: 0 4px; font-size: 11px; font-weight: 700; }
+.profile-setting-hint { color: var(--label-tertiary); margin: 0 4px 4px; font-size: 12px; font-weight: 500; line-height: 1.4; }
+
+/* ── Notification settings ── */
+.notif-group { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.notif-group-card { background: var(--bg-secondary); border-radius: var(--radius-xl); overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
+.notif-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 16px; }
+.notif-row-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.notif-row-label { font-size: 14px; font-weight: 600; color: var(--label-primary); }
+.notif-row-desc { font-size: 12px; font-weight: 500; color: var(--label-tertiary); }
+.notif-divider { height: 0.5px; background: var(--separator); margin: 0 16px; }
+
+/* ── Theme picker ── */
+.theme-picker-group { background: var(--bg-secondary); border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow-card); width: 100%; }
+.theme-option-row { display: flex; align-items: center; gap: 14px; padding: 16px; background: transparent; border: none; width: 100%; cursor: pointer; font-family: var(--font); text-align: left; transition: background 0.15s; }
+.theme-option-row:active { background: var(--fill-tertiary); }
+.theme-option-icon { font-size: 20px; width: 28px; text-align: center; flex-shrink: 0; }
+.theme-option-label { flex: 1; font-size: 15px; font-weight: 600; color: var(--label-primary); }
+.theme-option-divider { height: 0.5px; background: var(--separator); margin: 0 16px; }
+
+/* iOS-style toggle */
+.notif-toggle { position: relative; width: 48px; height: 28px; border-radius: 14px; border: none; background: #e0e0e0; cursor: pointer; padding: 0; flex-shrink: 0; transition: background 0.22s ease; }
+.notif-toggle.on { background: #34c759; }
+.notif-toggle-thumb { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.25); transition: transform 0.22s ease; display: block; }
+.notif-toggle.on .notif-toggle-thumb { transform: translateX(20px); }

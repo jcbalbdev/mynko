@@ -1,0 +1,36 @@
+/* ══════════════════════════════════════
+   TRANSACTION ROW + DATE GROUPS
+   (used in HomeScreen, HistoryScreen)
+══════════════════════════════════════ */
+
+.exp-date-group { margin-bottom: 4px; }
+.exp-date-header { align-items: center; gap: 10px; padding: 20px 0 10px; display: flex; }
+.exp-date-label { border-radius: var(--radius-full); color: var(--label-secondary); text-transform: capitalize; letter-spacing: 0.2px; white-space: nowrap; background: rgba(0,0,0,.07); flex-shrink: 0; align-items: center; padding: 5px 12px; font-size: 12px; font-weight: 800; display: inline-flex; }
+.exp-date-dash { border-top: 1.5px dashed rgba(0,0,0,.07); border-radius: 2px; flex: 1; height: 0; }
+.exp-date-total { border-radius: var(--radius-full); color: var(--label-secondary); white-space: nowrap; background: rgba(0,0,0,.07); flex-shrink: 0; align-items: center; padding: 5px 12px; font-size: 12px; font-weight: 800; display: inline-flex; }
+.exp-row {
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  width: 100%;
+  font-family: var(--font);
+  text-align: left;
+  background: #fff;
+  border: none;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 10px;
+  padding: 14px 16px;
+  transition: transform 0.15s cubic-bezier(.34,1.56,.64,1), box-shadow 0.15s;
+  display: flex;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04);
+}
+.exp-row:active { transform: scale(0.97); box-shadow: 0 1px 6px rgba(0,0,0,.06); }
+.exp-row-icon { border-radius: 50%; flex-shrink: 0; justify-content: center; align-items: center; width: 50px; height: 50px; font-size: 24px; display: flex; }
+.exp-row-info { flex-direction: column; flex: 1; gap: 3px; min-width: 0; display: flex; }
+.exp-row-cat { border-radius: var(--radius-full); color: #000; text-transform: uppercase; letter-spacing: 0.6px; align-self: flex-start; padding: 2px 10px; font-size: 10px; font-weight: 800; display: inline-flex; }
+.exp-row-desc { color: var(--label-primary); white-space: nowrap; text-overflow: ellipsis; font-size: 15px; font-weight: 800; overflow: hidden; }
+.exp-row-time { color: var(--label-quaternary); font-size: 11px; font-weight: 500; }
+.exp-row-meta { flex-wrap: wrap; align-items: center; gap: 6px; display: flex; }
+.exp-row-debt-pill { border-radius: var(--radius-full); color: #ff3b30; white-space: nowrap; letter-spacing: 0.1px; background: rgba(255,59,48,.12); align-items: center; padding: 2px 9px; font-size: 11px; font-weight: 800; transition: background 0.2s, color 0.2s; display: inline-flex; }
+.exp-row-debt-pill.paid { color: #1a7a34; background: rgba(52,199,89,.15); }
+.exp-row-amount { border-radius: var(--radius-full); color: var(--label-primary); white-space: nowrap; letter-spacing: -0.3px; background: rgba(0,0,0,.06); flex-shrink: 0; align-items: center; padding: 6px 12px; font-size: 15px; font-weight: 900; display: inline-flex; }

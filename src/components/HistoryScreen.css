@@ -1,0 +1,14 @@
+/* ══════════════════════════════════════
+   HISTORY SCREEN
+══════════════════════════════════════ */
+
+.history-screen {
+  -webkit-overflow-scrolling: touch;
+  height: 100%;
+  padding-bottom: calc(var(--tab-bar-height, 80px) + 8px);
+  overflow: hidden auto;
+}
+.history-content { padding-bottom: 8px; }
+.history-nav-bar { top: calc(env(safe-area-inset-top, 44px) + 14px); left: var(--space-md); z-index: 20; align-items: center; gap: 8px; display: flex; position: absolute; }
+.history-nav-back { border-radius: var(--radius-full); font-size: 13px; font-weight: 700; font-family: var(--font); cursor: pointer; color: var(--blue); background: rgba(0,0,0,.08); border: none; padding: 7px 14px; }
+.history-nav-signout { border-radius: var(--radius-full); font-size: 12px; font-weight: 700; font-family: var(--font); cursor: pointer; color: #ff3b30; background: rgba(255,59,48,.1); border: none; padding: 7px 12px; }

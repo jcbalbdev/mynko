@@ -1,0 +1,362 @@
+/* ══════════════════════════════════════
+   CREDIT VIEW
+══════════════════════════════════════ */
+
+/* Empty state */
+.credit-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 80px var(--space-md) 0;
+  text-align: center;
+}
+.credit-empty p {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--label-primary);
+}
+.credit-empty span {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--label-tertiary);
+  max-width: 240px;
+  line-height: 1.4;
+}
+
+/* ── Card list ── */
+.credit-list {
+  padding: 12px var(--space-md) 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.credit-card-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg-secondary);
+  border: none;
+  border-radius: var(--radius-2xl);
+  padding: 16px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: opacity 0.15s;
+  box-shadow: 0 2px 12px rgba(0,0,0,.07);
+}
+.credit-card-item:active { opacity: 0.75; }
+.credit-card-item-strip {
+  width: 4px;
+  min-height: 44px;
+  align-self: stretch;
+  border-radius: var(--radius-full);
+  background: #7C3AED;
+  flex-shrink: 0;
+}
+.credit-card-item-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.credit-card-item-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.credit-card-item-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--label-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.credit-card-item-debt {
+  font-size: 15px;
+  font-weight: 800;
+  color: #7C3AED;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.credit-card-item-bar {
+  height: 5px;
+  border-radius: var(--radius-full);
+  background: var(--fill-tertiary);
+  overflow: hidden;
+}
+.credit-card-item-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: #7C3AED;
+  transition: width 0.4s ease;
+}
+.credit-card-item-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.credit-card-item-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--label-tertiary);
+}
+.credit-card-item-avail {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--label-secondary);
+}
+.credit-card-item-due {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--label-tertiary);
+}
+.credit-card-item-interest {
+  font-size: 11px;
+  font-weight: 700;
+  color: #d97706;
+}
+
+/* FAB flotante de crédito */
+.credit-fab-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  border-radius: var(--radius-full);
+  height: 52px;
+  padding: 0 28px;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(.34,1.56,.64,1), opacity 0.15s;
+  box-shadow: 0 6px 20px rgba(0,0,0,.22);
+}
+.credit-fab-pill:active { transform: scale(0.96); opacity: 0.85; }
+.credit-fab-pill--charge { background: #7C3AED; }
+.credit-fab-pill--pay    { background: #1a7a34; }
+
+/* Interest section inside drill card */
+.credit-drill-interest {
+  border-top: 1px solid rgba(255,255,255,.2);
+  margin-top: 10px;
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.credit-drill-interest-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.credit-drill-interest-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,.6);
+}
+.credit-drill-interest-value {
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(255,255,255,.9);
+}
+.credit-drill-interest-daily {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,.45);
+  margin-top: 2px;
+}
+
+/* ── Drill view ── */
+.credit-drill {
+  display: flex;
+  flex-direction: column;
+}
+.credit-drill-back {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--label-secondary);
+  padding: 12px var(--space-md) 8px;
+  align-self: flex-start;
+}
+.credit-drill-back:active { opacity: 0.6; }
+
+.credit-drill-card {
+  margin: 0 var(--space-md) 16px;
+  border-radius: var(--radius-2xl);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.credit-drill-card-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255,255,255,.75);
+}
+.credit-drill-card-debt {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.credit-drill-card-debt-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,.6);
+}
+.credit-drill-card-debt-amount {
+  font-size: 28px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -1px;
+}
+.credit-drill-card-avail {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,.7);
+}
+.credit-drill-bar {
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: rgba(255,255,255,.25);
+  overflow: hidden;
+  margin-top: 4px;
+}
+.credit-drill-bar-fill {
+  height: 100%;
+  background: #fff;
+  border-radius: var(--radius-full);
+  transition: width 0.4s ease;
+}
+
+/* Action buttons */
+.credit-drill-actions {
+  display: flex;
+  gap: 10px;
+  padding: 0 var(--space-md) 16px;
+}
+.credit-drill-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  border-radius: var(--radius-xl);
+  padding: 13px 0;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.credit-drill-action-btn:active { opacity: 0.75; }
+.credit-drill-action-btn--charge {
+  background: rgba(124,58,237,.12);
+  color: #7C3AED;
+}
+.credit-drill-action-btn--payment {
+  background: rgba(52,199,89,.12);
+  color: #1a7a34;
+}
+
+/* Empty drill state */
+.credit-drill-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 48px var(--space-md);
+  text-align: center;
+}
+.credit-drill-empty p {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--label-primary);
+}
+.credit-drill-empty span {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--label-tertiary);
+}
+
+/* ── Timeline ── */
+.credit-timeline {
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--space-md);
+  gap: 2px;
+}
+.credit-timeline-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-xl);
+  background: var(--bg-secondary);
+}
+.credit-timeline-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.credit-timeline-icon--charge  { background: rgba(124,58,237,.12); color: #7C3AED; }
+.credit-timeline-icon--payment { background: rgba(52,199,89,.12);  color: #1a7a34; }
+.credit-timeline-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.credit-timeline-desc {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--label-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.credit-timeline-meta {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--label-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.credit-timeline-badge {
+  background: rgba(124,58,237,.1);
+  color: #7C3AED;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+}
+.credit-timeline-amount {
+  font-size: 14px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.credit-timeline-amount--charge  { color: #7C3AED; }
+.credit-timeline-amount--payment { color: #1a7a34; }

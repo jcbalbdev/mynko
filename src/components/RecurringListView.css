@@ -1,0 +1,293 @@
+/* ══════════════════════════════════════
+   RECURRING LIST VIEW
+══════════════════════════════════════ */
+
+.rec-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+
+/* ── iOS Segmented Control ── */
+.rec-tabs {
+  display: flex;
+  margin: 16px var(--space-md) 8px;
+  background: rgba(118, 118, 128, 0.12);
+  border-radius: 10px;
+  padding: 2px;
+  flex-shrink: 0;
+  position: relative;
+}
+.rec-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 4px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--label-secondary);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  position: relative;
+  z-index: 1;
+}
+.rec-tab.active {
+  background: #fff;
+  color: var(--label-primary);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 0.5px 1px rgba(0,0,0,0.08);
+}
+.rec-tab-badge {
+  background: var(--blue);
+  color: #fff;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  min-width: 18px;
+  text-align: center;
+}
+.rec-tab.active .rec-tab-badge {
+  background: var(--blue);
+}
+
+/* ── List ── */
+.rec-list {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px var(--space-md) 0;
+}
+
+/* ── Empty state ── */
+.rec-empty {
+  text-align: center;
+  padding: 48px 32px;
+}
+.rec-empty-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--label-primary);
+  margin-bottom: 8px;
+}
+.rec-empty-desc {
+  font-size: 13px;
+  color: var(--label-tertiary);
+  line-height: 1.5;
+}
+
+/* ── Card ── */
+.rec-card {
+  background: #fff;
+  border-radius: var(--radius-xl);
+  padding: 14px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  transition: box-shadow 0.15s;
+}
+.rec-card--urgent {
+  border-left: 3px solid #FF3B30;
+}
+
+.rec-card-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+.rec-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.rec-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.rec-card-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--label-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rec-card-schedule {
+  font-size: 12px;
+  color: var(--label-tertiary);
+  font-weight: 500;
+}
+.rec-card-due {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--label-tertiary);
+  margin-top: 2px;
+}
+.rec-card-due--urgent {
+  color: #FF3B30;
+}
+.rec-card-last {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  color: var(--label-quaternary);
+  margin-top: 1px;
+}
+
+.rec-card-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.rec-card-amount {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--label-primary);
+}
+.rec-card-currency {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--label-tertiary);
+}
+.rec-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Confirm button */
+.rec-confirm-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #34C759;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-full);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.rec-confirm-btn:active { transform: scale(0.93); opacity: 0.85; }
+
+/* Delete button */
+.rec-delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: var(--fill-tertiary);
+  color: var(--label-tertiary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.rec-delete-btn:active { background: #FFE5E5; color: #FF3B30; }
+
+/* Auto badge (suscripciones) */
+.rec-auto-badge {
+  background: var(--blue);
+  color: #fff;
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 9px;
+}
+
+/* ── Day / schedule pickers (used in AddRecurring/AddSubscription sheets) ── */
+.recurring-days-row {
+  display: flex;
+  gap: 8px;
+  padding: 4px var(--space-md);
+  flex-wrap: nowrap;
+}
+
+.recurring-day-chip {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid var(--fill-tertiary);
+  background: var(--fill-tertiary);
+  color: var(--label-secondary);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+.recurring-day-chip.active {
+  background: var(--label-primary);
+  border-color: var(--label-primary);
+  color: #fff;
+}
+.recurring-day-chip:active { transform: scale(0.88); }
+
+.recurring-month-day-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px var(--space-md);
+  justify-content: center;
+}
+.recurring-month-day-grid .recurring-day-chip {
+  width: 36px;
+  height: 36px;
+  font-size: 12px;
+  border-radius: 10px;
+}
+
+.recurring-months-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 4px var(--space-md);
+}
+.recurring-month-chip {
+  padding: 9px 4px;
+  border-radius: 12px;
+  border: 1.5px solid var(--fill-tertiary);
+  background: var(--fill-tertiary);
+  color: var(--label-secondary);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+.recurring-month-chip.active {
+  background: var(--label-primary);
+  border-color: var(--label-primary);
+  color: #fff;
+}
+.recurring-month-chip:active { transform: scale(0.93); }

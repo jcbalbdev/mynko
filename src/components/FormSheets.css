@@ -1,0 +1,299 @@
+/* ══════════════════════════════════════
+   FORM SHEETS — Shared input styles
+   Used by: AddExpenseSheet, AddIncomeSheet, AddDebtSheet,
+            AddExchangeSheet, TransferSheet, ExpenseEditSheet,
+            CategoryEditSheet, QuickAddModal
+══════════════════════════════════════ */
+
+/* ── Generic text input ── */
+.text-input {
+  width: calc(100% - var(--space-xl));
+  display: block;
+  margin: 0 auto var(--space-sm);
+  background: var(--fill-tertiary);
+  border-radius: var(--radius-xl);
+  border: 1.5px solid transparent;
+  outline: none;
+  padding: 14px 16px;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--label-primary);
+  caret-color: var(--blue);
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+.text-input:focus { border-color: var(--blue); }
+.text-input::placeholder { color: var(--label-quaternary); }
+
+/* ── Amount input wrapper ── */
+.amount-input-wrapper {
+  width: calc(100% - var(--space-xl));
+  margin: 0 auto var(--space-sm);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--fill-tertiary);
+  border-radius: var(--radius-xl);
+  border: 1.5px solid transparent;
+  padding: 0 16px;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+.amount-input-wrapper:focus-within { border-color: var(--blue); }
+.amount-input-field {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--label-primary);
+  caret-color: var(--blue);
+  padding: 14px 0;
+  min-width: 0;
+}
+.amount-input-field::placeholder { color: var(--label-quaternary); }
+.amount-currency-badge {
+  color: var(--label-tertiary);
+  font-size: 14px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+/* ── Hint / error text ── */
+.form-hint-text {
+  color: var(--label-tertiary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  padding: 0 var(--space-md) var(--space-sm);
+  margin: -4px 0 0;
+}
+.form-error-text {
+  color: #EA4335;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px var(--space-md) 0;
+}
+
+/* ── Account type toggle (shared with AddAccountSheet & AccountDetailSheet) ── */
+.account-type-toggle {
+  display: flex;
+  gap: 0;
+  padding: 3px;
+  background: var(--fill-tertiary);
+  border-radius: var(--radius-xl);
+  margin: 0 var(--space-md) var(--space-md);
+}
+.account-type-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 8px;
+  border: none;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  background: transparent;
+  color: var(--label-secondary);
+  border-radius: calc(var(--radius-xl) - 3px);
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+}
+.account-type-btn:active { opacity: 0.7; }
+.account-type-btn.active {
+  background: #fff;
+  color: var(--acc-color, #111214);
+  box-shadow: 0 1px 6px rgba(0,0,0,.12), 0 0.5px 2px rgba(0,0,0,.08);
+}
+
+/* ── Transfer sheet ── */
+.transfer-accounts-row { display: flex; align-items: center; gap: 8px; padding: 0 var(--space-md) var(--space-sm); }
+.transfer-account-select-wrapper { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.transfer-select-label { color: var(--label-tertiary); font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+.transfer-account-select {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--fill-tertiary);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-lg);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--label-primary);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  appearance: none;
+}
+.transfer-account-select:focus { border-color: var(--blue); }
+.transfer-arrow { color: var(--label-tertiary); flex-shrink: 0; }
+.transfer-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 4px var(--space-md) 12px;
+  padding: 12px 16px;
+  background: var(--fill-secondary);
+  border-radius: var(--radius-xl);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--label-secondary);
+}
+.transfer-preview-from, .transfer-preview-to { color: var(--label-primary); }
+.transfer-preview-amount { color: #34A853; font-size: 15px; font-weight: 900; margin-left: auto; }
+
+/* Arrow divider between De / A pickers */
+.transfer-arrow-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--label-tertiary);
+  padding: 2px 0 2px;
+}
+
+/* ── Debt sheet ── */
+.debt-col-headers { display: flex; gap: 8px; padding: 0 var(--space-md) 6px; }
+.debt-col-header { flex: 1; color: var(--label-tertiary); font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+.debt-col-header--right { flex: 0 0 110px; text-align: right; }
+.debt-debtor-row { display: flex; align-items: center; gap: 8px; padding: 0 var(--space-md) 8px; }
+.debt-debtor-name {
+  flex: 1;
+  background: var(--fill-tertiary);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-lg);
+  outline: none;
+  padding: 10px 12px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--label-primary);
+  caret-color: var(--blue);
+  transition: border-color 0.15s;
+}
+.debt-debtor-name:focus { border-color: var(--blue); }
+.debt-debtor-name::placeholder { color: var(--label-quaternary); }
+.debt-debtor-amount-wrap {
+  flex: 0 0 110px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--fill-tertiary);
+  border-radius: var(--radius-lg);
+  border: 1.5px solid transparent;
+  padding: 0 8px;
+  transition: border-color 0.15s;
+}
+.debt-debtor-amount-wrap:focus-within { border-color: var(--blue); }
+.debt-debtor-amount {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--label-primary);
+  padding: 10px 0;
+  min-width: 0;
+}
+.debt-debtor-currency { color: var(--label-tertiary); font-size: 11px; font-weight: 800; flex-shrink: 0; }
+.debt-remove-row-btn { background: none; border: none; padding: 6px; cursor: pointer; color: #EA4335; opacity: 0.7; display: flex; align-items: center; }
+.debt-remove-row-btn:active { opacity: 1; }
+.debt-add-row-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(100% - var(--space-xl));
+  margin: 0 auto;
+  padding: 10px;
+  background: var(--fill-secondary);
+  border: 1.5px dashed var(--fill-primary);
+  border-radius: var(--radius-lg);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--label-secondary);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.debt-add-row-btn:active { background: var(--fill-tertiary); }
+
+/* ── Credit charge / payment shared elements ── */
+.form-picker-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 var(--space-md) var(--space-sm);
+}
+.form-picker-chip {
+  background: var(--fill-tertiary);
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 8px 16px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--label-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.form-picker-chip.active { background: #111214; color: #fff; }
+.form-picker-chip:active { opacity: 0.8; }
+
+.form-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px var(--space-md) var(--space-sm);
+}
+.form-toggle-btn {
+  width: 48px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: var(--fill-primary);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.form-toggle-btn.active { background: #111214; }
+.form-toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+  transition: transform 0.2s cubic-bezier(.34,1.56,.64,1);
+  display: block;
+}
+.form-toggle-btn.active .form-toggle-knob { transform: translateX(20px); }
+
+.form-text-input {
+  width: calc(100% - var(--space-xl));
+  display: block;
+  margin: 0 auto var(--space-sm);
+  background: var(--fill-tertiary);
+  border-radius: var(--radius-xl);
+  border: 1.5px solid transparent;
+  outline: none;
+  padding: 14px 16px;
+  font-family: var(--font);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--label-primary);
+  caret-color: var(--blue);
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+.form-text-input:focus { border-color: var(--blue); }
+.form-text-input::placeholder { color: var(--label-quaternary); }

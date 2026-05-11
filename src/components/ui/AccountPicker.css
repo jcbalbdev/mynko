@@ -1,0 +1,29 @@
+/* ══════════════════════════════════════
+   ACCOUNT PICKER
+══════════════════════════════════════ */
+
+.account-picker-trigger { width: 100%; display: flex; align-items: center; gap: 10px; background: var(--surface); border: none; border-radius: 12px; padding: 12px 14px; cursor: pointer; text-align: left; transition: background 0.15s; }
+.account-picker-trigger:active { background: #ebebef; }
+.account-picker-name { flex: 1; font-size: 15px; font-weight: 500; color: var(--label); letter-spacing: -0.2px; }
+.account-picker-chevron { font-size: 20px; color: #c7c7cc; line-height: 1; font-weight: 300; }
+.account-picker-none-dot { width: 36px; height: 36px; border-radius: 10px; background: #f2f2f7; flex-shrink: 0; }
+.acpicker-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 2000; display: flex; align-items: flex-end; animation: acpicker-fade-in 0.22s ease both; }
+@keyframes acpicker-fade-in {
+  from { background: rgba(0,0,0,0); }
+  to   { background: rgba(0,0,0,0.35); }
+}
+.acpicker-sheet { width: 100%; max-height: 70vh; background: #fff; border-radius: 20px 20px 0 0; padding: 8px 0 32px; display: flex; flex-direction: column; animation: acpicker-slide-up 0.3s cubic-bezier(.32,1,.55,1) both; }
+@keyframes acpicker-slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.acpicker-handle { width: 36px; height: 4px; border-radius: 2px; background: #d1d1d6; margin: 0 auto 12px; }
+.acpicker-title { font-size: 13px; font-weight: 600; color: #8e8e93; text-align: center; letter-spacing: 0.3px; margin: 0 0 10px; }
+.acpicker-list { overflow-y: auto; flex: 1; padding: 0 16px; }
+.acpicker-divider { height: 1px; background: #f2f2f7; margin: 6px 0; }
+.acpicker-row { width: 100%; display: flex; align-items: center; gap: 12px; background: none; border: none; padding: 12px 4px; cursor: pointer; text-align: left; border-radius: 10px; transition: background 0.12s; }
+.acpicker-row:active { background: #f2f2f7; }
+.acpicker-row--active .acpicker-row-name { color: #007aff; font-weight: 600; }
+.acpicker-row-name { flex: 1; font-size: 16px; font-weight: 500; color: var(--label); letter-spacing: -0.2px; }
+.acpicker-none-icon { width: 36px; height: 36px; border-radius: 10px; background: #f2f2f7; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.acpicker-check { flex-shrink: 0; }

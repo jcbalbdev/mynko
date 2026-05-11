@@ -1,0 +1,43 @@
+/* ══════════════════════════════════════
+   CALENDAR MODAL
+══════════════════════════════════════ */
+
+.cal-modal-overlay {
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 200;
+  padding: var(--space-md);
+  background: rgba(0,0,0,.45);
+  justify-content: center;
+  align-items: center;
+  animation: 0.18s both fadeIn;
+  display: flex;
+  position: fixed;
+  inset: 0;
+}
+.cal-modal { background: var(--bg-secondary); border-radius: var(--radius-2xl); width: 100%; max-width: 360px; padding: 20px 16px 8px; animation: 0.22s cubic-bezier(.34,1.2,.64,1) both slideUp; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+.cal-modal-nav { justify-content: space-between; align-items: center; margin-bottom: 16px; padding: 0 4px; display: flex; }
+.cal-modal-close { background: var(--bg-primary); border-radius: var(--radius-xl); width: 100%; font-family: var(--font); color: var(--label-secondary); cursor: pointer; border: none; margin-top: 8px; padding: 13px; font-size: 15px; font-weight: 700; transition: background 0.15s; display: block; }
+.cal-modal-close:active { background: var(--bg-tertiary); }
+
+/* Inline cal picker */
+.cal-picker { margin: 0 var(--space-md) var(--space-md); background: var(--bg-secondary); border-radius: var(--radius-xl); padding: 16px; animation: 0.22s cubic-bezier(.34,1.2,.64,1) both fadeSlideUp; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+.cal-nav { justify-content: space-between; align-items: center; margin-bottom: 14px; display: flex; }
+.cal-nav-btn { border-radius: var(--radius-full); cursor: pointer; width: 34px; height: 34px; color: var(--label-primary); background: rgba(0,0,0,.06); border: none; justify-content: center; align-items: center; transition: background 0.15s; display: flex; }
+.cal-nav-btn:active { background: rgba(0,0,0,.12); }
+.cal-month-label { color: var(--label-primary); text-transform: capitalize; letter-spacing: -0.2px; font-size: 15px; font-weight: 800; }
+.cal-grid { grid-template-columns: repeat(7, 1fr); gap: 4px; display: grid; }
+.cal-day-name { color: var(--label-tertiary); text-align: center; letter-spacing: 0.3px; padding: 4px 0 8px; font-size: 11px; font-weight: 800; }
+.cal-day { aspect-ratio: 1; border-radius: var(--radius-full); font-family: var(--font); color: var(--label-primary); cursor: pointer; background: transparent; border: none; justify-content: center; align-items: center; font-size: 14px; font-weight: 600; transition: background 0.12s, transform 0.12s; display: flex; }
+.cal-day:hover:not(.cal-day--empty):not(.cal-day--disabled) { background: rgba(0,0,0,.06); }
+.cal-day:active:not(.cal-day--empty):not(.cal-day--disabled) { transform: scale(0.88); }
+.cal-day--empty { pointer-events: none; }
+.cal-day--disabled { color: var(--label-quaternary); pointer-events: none; }
+.cal-day--today { color: var(--blue); background: rgba(0,122,255,.08); font-weight: 900; }
+.cal-day--selected { font-weight: 900; background: var(--label-primary) !important; color: #fff !important; }
+
+/* Date field button */
+.date-field-btn { width: calc(100% - var(--space-xl)); margin: 0 auto var(--space-sm); background: var(--fill-tertiary); border-radius: var(--radius-xl); font-family: var(--font); color: var(--label-primary); cursor: pointer; text-align: left; border: none; align-items: center; gap: 10px; padding: 14px 16px; font-size: 14px; font-weight: 700; transition: background 0.15s; display: flex; }
+.date-field-btn:active { background: var(--bg-tertiary); }
+.date-field-icon { color: var(--blue); flex-shrink: 0; }
+.date-field-label { color: var(--label-primary); flex: 1; font-weight: 700; }
+.date-field-chevron { color: var(--label-tertiary); font-size: 10px; }

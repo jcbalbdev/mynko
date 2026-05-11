@@ -1,0 +1,56 @@
+/* ══════════════════════════════════════
+   INCOME LIST VIEW
+══════════════════════════════════════ */
+
+.income-type-toggle {
+  background: var(--fill-tertiary);
+  border-radius: var(--radius-xl);
+  margin: 0 var(--space-md);
+  gap: 3px;
+  padding: 3px;
+  display: flex;
+}
+.income-type-btn {
+  border-radius: calc(var(--radius-xl) - 3px);
+  font-family: var(--font);
+  color: var(--label-secondary);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  flex: 1;
+  padding: 9px 0;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+}
+.income-type-btn.active { color: var(--label-primary); background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+.income-amount { color: var(--label-primary); white-space: nowrap; flex-shrink: 0; padding-left: 12px; font-size: 15px; font-weight: 800; }
+.income-amount-row {
+  background: var(--fill-tertiary);
+  border-radius: var(--radius-xl);
+  margin: 0 var(--space-md);
+  box-sizing: border-box;
+  border: 1.5px solid transparent;
+  align-items: center;
+  padding: 0 16px;
+  transition: border-color 0.15s;
+  display: flex;
+}
+.income-amount-row:focus-within { border-color: var(--blue); }
+.income-amount-input {
+  font-family: var(--font);
+  color: var(--label-primary);
+  caret-color: var(--blue);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  outline: none;
+  flex: 1;
+  width: 100%;
+  margin: 0;
+  padding: 14px 0;
+  font-size: 22px;
+  font-weight: 800;
+}
+.income-amount-input::placeholder { color: var(--label-quaternary); }
+.income-amount-currency { color: var(--label-tertiary); white-space: nowrap; flex-shrink: 0; padding-left: 6px; font-size: 13px; font-weight: 800; }

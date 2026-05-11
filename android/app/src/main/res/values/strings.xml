@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Mynko</string>
+    <string name="title_activity_main">Mynko</string>
+    <string name="package_name">com.mynko.app</string>
+    <string name="custom_url_scheme">com.mynko.app</string>
+</resources>

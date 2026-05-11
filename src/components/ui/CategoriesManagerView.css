@@ -1,0 +1,202 @@
+/* ══════════════════════════════════════
+   CATEGORIES MANAGER VIEW
+══════════════════════════════════════ */
+
+.catmgr-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.catmgr-create-box {
+  background: var(--surface);
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+
+.catmgr-create-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--label);
+  margin-bottom: 12px;
+}
+
+.catmgr-create-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  justify-content: flex-end;
+}
+
+.catmgr-btn-cancel {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--label-secondary);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.catmgr-btn-save {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+.catmgr-btn-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.catmgr-group {
+  background: var(--surface);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.catmgr-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.catmgr-header:active {
+  background: #ebebef;
+}
+
+.catmgr-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.catmgr-color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.catmgr-cat-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--label);
+}
+
+.catmgr-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--label-secondary);
+  background: rgba(0,0,0,0.06);
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.catmgr-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--label-tertiary);
+}
+
+.catmgr-add-btn {
+  background: rgba(0,0,0,0.05);
+  border: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--label-secondary);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.catmgr-add-btn:active {
+  background: rgba(0,0,0,0.1);
+}
+
+.catmgr-subs {
+  padding: 0 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.catmgr-empty {
+  font-size: 13px;
+  color: var(--label-tertiary);
+  font-style: italic;
+  padding: 4px 0;
+}
+
+.catmgr-sub-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 24px;
+}
+
+.cat-chip {
+  padding: 4px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.catmgr-del-btn {
+  background: transparent;
+  border: none;
+  color: var(--label-tertiary);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+.catmgr-del-btn:active {
+  background: rgba(255, 59, 48, 0.1);
+  color: #ff3b30;
+}
+
+.catmgr-del-confirm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #ff3b30;
+  font-weight: 500;
+}
+
+.catmgr-btn-del-yes,
+.catmgr-btn-del-no {
+  border: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.catmgr-btn-del-yes {
+  background: #ff3b30;
+  color: #fff;
+}
+
+.catmgr-btn-del-no {
+  background: #f2f2f7;
+  color: var(--label-secondary);
+}

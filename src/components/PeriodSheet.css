@@ -1,0 +1,105 @@
+.period-sheet {
+  padding: 0 var(--space-xl) var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Tabs ── */
+.period-tabs {
+  display: flex;
+  background: var(--fill-tertiary);
+  border-radius: var(--radius-xl);
+  padding: 3px;
+  gap: 3px;
+}
+.period-tab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--label-tertiary);
+  padding: 8px 12px;
+  border-radius: calc(var(--radius-xl) - 3px);
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+.period-tab.active {
+  background: var(--bg-primary);
+  color: var(--label-primary);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Drum row ── */
+.drum-row {
+  display: flex;
+  gap: 4px;
+}
+
+/* ── Drum picker ── */
+.drum-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.drum-scroll {
+  height: 100%;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 28%, black 72%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 28%, black 72%, transparent 100%);
+}
+.drum-scroll::-webkit-scrollbar { display: none; }
+
+.drum-item {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  scroll-snap-align: center;
+  font-family: var(--font);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--label-primary);
+}
+
+/* Selection highlight — rendered after scroll so it sits on top */
+.drum-highlight {
+  position: absolute;
+  top: 50%;
+  left: 4px;
+  right: 4px;
+  height: 44px;
+  transform: translateY(-50%);
+  background: var(--fill-tertiary);
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+/* ── Custom date drum ── */
+.period-custom-drum {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.period-drum-label {
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--label-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin: 0;
+  padding: 0 2px;
+}
+
+/* ── Save button ── */
+.period-save-btn {
+  margin-top: 4px;
+}

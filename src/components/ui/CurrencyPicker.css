@@ -1,0 +1,33 @@
+/* ══════════════════════════════════════
+   CURRENCY PICKER
+══════════════════════════════════════ */
+
+.currency-trigger { width: calc(100% - var(--space-xl)); background: var(--fill-tertiary); border-radius: var(--radius-xl); font-family: var(--font); cursor: pointer; text-align: left; border: 1.5px solid transparent; align-items: center; gap: 10px; margin: 0 auto; padding: 13px 16px; transition: border-color 0.15s, background 0.15s; display: flex; }
+.currency-trigger:active { background: var(--bg-tertiary); }
+.currency-trigger-flag { flex-shrink: 0; font-size: 22px; }
+.currency-trigger-text { flex-direction: column; flex: 1; min-width: 0; display: flex; }
+.currency-trigger-code { color: var(--label-primary); font-size: 14px; font-weight: 800; line-height: 1.2; }
+.currency-trigger-name { color: var(--label-tertiary); font-size: 12px; font-weight: 500; line-height: 1.2; }
+.currency-trigger-chevron { color: var(--label-quaternary); flex-shrink: 0; font-size: 10px; }
+.currency-flag-img { object-fit: cover; border-radius: 3px; flex-shrink: 0; display: block; }
+.currency-search { font-family: var(--font); color: var(--label-primary); background: var(--fill-tertiary); border-radius: var(--radius-lg); caret-color: var(--blue); box-sizing: border-box; border: 1.5px solid transparent; outline: none; padding: 11px 14px; font-size: 14px; font-weight: 600; transition: border-color 0.15s; }
+.currency-search:focus { border-color: var(--blue); }
+.currency-search::placeholder { color: var(--label-quaternary); }
+.currency-modal-overlay { -webkit-backdrop-filter: blur(4px); z-index: 300; background: rgba(0,0,0,.45); justify-content: center; align-items: flex-end; animation: 0.15s fadeIn; display: flex; position: fixed; inset: 0; }
+.currency-modal { width: 100%; max-width: 430px; padding: 20px 0 calc(env(safe-area-inset-bottom, 0px) + 20px); background: #f9f9f9; border-radius: 24px 24px 0 0; flex-direction: column; gap: 12px; max-height: 70vh; animation: 0.22s cubic-bezier(.34,1.56,.64,1) slideUp; display: flex; }
+.currency-modal-header { justify-content: space-between; align-items: center; padding: 0 20px; display: flex; }
+.currency-modal-title { color: var(--label-primary); font-size: 16px; font-weight: 800; font-family: var(--font); }
+.currency-modal-close { background: var(--fill-tertiary); width: 28px; height: 28px; color: var(--label-secondary); cursor: pointer; font-size: 13px; font-family: var(--font); border: none; border-radius: 50%; justify-content: center; align-items: center; display: flex; }
+.currency-modal .currency-search { box-sizing: border-box; width: calc(100% - 40px); margin: 0 20px; }
+.currency-modal-list { -webkit-overflow-scrolling: touch; flex-direction: column; flex: 1; gap: 4px; padding: 0 16px; display: flex; overflow-y: auto; }
+.currency-modal-item { border: 1.5px solid var(--separator); border-radius: var(--radius-xl); cursor: pointer; font-family: var(--font); text-align: left; background: #fff; align-items: center; gap: 10px; padding: 11px 14px; transition: border-color 0.12s, background 0.12s, transform 0.1s; display: flex; }
+.currency-modal-item:active { transform: scale(0.98); }
+.currency-modal-item.active { background: #111214; border-color: #111214; }
+.currency-flag { flex-shrink: 0; font-size: 22px; line-height: 1; }
+.currency-chip-text { flex-direction: column; flex: 1; min-width: 0; display: flex; }
+.currency-code { color: var(--label-primary); font-size: 14px; font-weight: 800; line-height: 1.2; }
+.currency-modal-item.active .currency-code { color: #fff; }
+.currency-country { color: var(--label-tertiary); font-size: 12px; font-weight: 500; line-height: 1.2; }
+.currency-modal-item.active .currency-country { color: rgba(255,255,255,.6); }
+.currency-symbol { color: var(--label-secondary); flex-shrink: 0; font-size: 16px; font-weight: 700; }
+.currency-modal-item.active .currency-symbol { color: rgba(255,255,255,.8); }
