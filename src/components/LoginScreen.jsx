@@ -49,7 +49,7 @@ export default function LoginScreen({ onSignIn, onSignUp }) {
     } else {
       const { error: err } = await onSignUp(email.trim(), password);
       if (!err) setSuccess(true);
-      else setError(friendlyError(err.message));
+      else { console.error('[signUp error]', err); setError(friendlyError(err.message)); }
     }
     setLoading(false);
   };
