@@ -25,7 +25,11 @@ export function useAuth() {
 
   /** Create a new account */
   const signUp = async (email, password) => {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: 'https://mynko.vercel.app/verified' },
+    });
     return { data, error };
   };
 
