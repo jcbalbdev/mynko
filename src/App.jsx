@@ -32,6 +32,7 @@ import AddExpenseSheet      from './components/AddExpenseSheet';
 import YapeExpenseSheet    from './components/YapeExpenseSheet';
 import LoginScreen          from './components/LoginScreen';
 import OnboardingScreen     from './components/OnboardingScreen';
+import VerifiedScreen       from './components/VerifiedScreen';
 import Toast                from './components/ui/Toast';
 import LoadingScreen        from './components/ui/LoadingScreen';
 
@@ -607,6 +608,8 @@ export default function App() {
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);
   }, [session?.access_token, user?.id]);
+
+  if (window.location.pathname === '/verified') return <VerifiedScreen />;
 
   if (loading)  return <LoadingScreen />;
   if (!session) return <LoginScreen onSignIn={signIn} onSignUp={signUp} />;
