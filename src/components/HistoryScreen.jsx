@@ -84,7 +84,7 @@ export default function HistoryScreen({ expenses, getMonthExpenses, getMonthTota
       {filtered.length > 0 && (
         <div className="total-bar animate-in">
           <span className="total-label">{filtered.length} gasto{filtered.length !== 1 ? 's' : ''}</span>
-          <span className="total-value">{formatAmount(filteredTotal)} {primaryCurrency}</span>
+          <span className="total-value">{formatAmount(filteredTotal)} {getCurrencyByCode(primaryCurrency).symbol}</span>
         </div>
       )}
 

@@ -61,13 +61,14 @@ export default function CalendarModal({ value, onChange, onClose }) {
 
         {/* Month / year navigation */}
         <div className="cal-modal-nav">
-          <button className="cal-nav-btn" onClick={prevMonth} aria-label="Mes anterior">
+          <button type="button" className="cal-nav-btn" onClick={prevMonth} aria-label="Mes anterior">
             <ChevronLeft size={18} strokeWidth={2.5} />
           </button>
           <span className="cal-month-label">
             {MONTHS_ES[vm]} {vy}
           </span>
           <button
+            type="button"
             className="cal-nav-btn"
             onClick={nextMonth}
             disabled={capFuture}
@@ -109,7 +110,7 @@ export default function CalendarModal({ value, onChange, onClose }) {
           })}
         </div>
 
-        <button className="cal-modal-close" onClick={onClose} aria-label="Cerrar calendario">
+        <button type="button" className="cal-modal-close" onClick={onClose} aria-label="Cerrar calendario">
           Cancelar
         </button>
       </div>

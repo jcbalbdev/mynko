@@ -29,7 +29,7 @@ async function push(at: string, token: string, title: string, body: string) {
   await fetch(`https://fcm.googleapis.com/v1/projects/${pid}/messages:send`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: { token, notification: { title, body } } }),
+    body: JSON.stringify({ message: { token, notification: { title, body }, android: { notification: { icon: 'ic_launcher_cat' } } } }),
   })
 }
 

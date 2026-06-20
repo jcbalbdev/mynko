@@ -5,8 +5,10 @@
  */
 import React, { useState, useMemo } from 'react';
 import './RecurringListView.css';
-import { Plus, Check, Trash2, Bell, RefreshCw } from 'lucide-react';
+import { Check, Bell, RefreshCw, CalendarClock } from 'lucide-react';
 import EditRecurringSheet from './EditRecurringSheet';
+import EmptyState from './ui/EmptyState';
+import { getCurrencyByCode } from '../utils/currencies';
 
 const WEEK_LABELS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
@@ -14,6 +16,21 @@ const MONTH_NAMES = [
   'ene', 'feb', 'mar', 'abr', 'may', 'jun',
   'jul', 'ago', 'sep', 'oct', 'nov', 'dic',
 ];
+
+function isRegisteredToday(rec) {
+  if (!rec.lastTriggeredAt) return false;
+  const today     = new Date();
+  const triggered = new Date(rec.lastTriggeredAt);
+  const sameDay   =
+    triggered.getFullYear() === today.getFullYear() &&
+    triggered.getMonth()    === today.getMonth()    &&
+    triggered.getDate()     === today.getDate();
+  if (!sameDay) return false;
+  if (rec.frequency === 'weekly')  return (rec.daysOfWeek ?? []).includes(today.getDay());
+  if (rec.frequency === 'monthly') return today.getDate() === rec.dayOfMonth;
+  if (rec.frequency === 'yearly')  return today.getDate() === rec.yearlyDay && (today.getMonth() + 1) === rec.yearlyMonth;
+  return false;
+}
 
 function scheduleLabel(rec) {
   if (rec.frequency === 'weekly') {
@@ -45,11 +62,12 @@ function nextDueLabel(nextDueDate) {
   return { text: `En ${diff} días`, urgent: false };
 }
 
-function RecurringCard({ rec, onConfirm, onDelete, onEdit }) {
-  const dueLabel = nextDueLabel(rec.nextDueDate);
+function RecurringCard({ rec, onConfirm, onMarkDone, onEdit }) {
+  const dueLabel   = nextDueLabel(rec.nextDueDate);
+  const registered = isRegisteredToday(rec);
 
   return (
-    <div className={`rec-card${dueLabel?.urgent ? ' rec-card--urgent' : ''}`} onClick={() => onEdit(rec)} style={{ cursor: 'pointer' }}>
+    <div className="rec-card" onClick={() => onEdit(rec)}>
       <div className="rec-card-left">
         <div className="rec-card-info">
           <span className="rec-card-name">{rec.description || rec.category}</span>
@@ -66,23 +84,26 @@ function RecurringCard({ rec, onConfirm, onDelete, onEdit }) {
         <span className="rec-card-amount">
           {rec.amount.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
           {' '}
-          <span className="rec-card-currency">{rec.currency}</span>
+          <span className="rec-card-currency">{getCurrencyByCode(rec.currency).symbol}</span>
         </span>
-        <div className="rec-card-actions">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {!registered && (
+            <button
+              className="rec-skip-btn"
+              onClick={e => { e.stopPropagation(); onMarkDone(rec.id); }}
+              aria-label="Ya lo registré"
+            >
+              Ya lo registré
+            </button>
+          )}
           <button
-            className="rec-confirm-btn"
-            onClick={e => { e.stopPropagation(); onConfirm(rec.id); }}
-            aria-label="Registrar pago"
+            className={`rec-confirm-btn${registered ? ' rec-confirm-btn--done' : ''}`}
+            onClick={e => { e.stopPropagation(); if (!registered) onConfirm(rec.id); }}
+            aria-label={registered ? 'Ya registrado hoy' : 'Registrar pago'}
+            disabled={registered}
           >
-            <Check size={14} strokeWidth={3} />
-            Registrar
-          </button>
-          <button
-            className="rec-delete-btn"
-            onClick={e => { e.stopPropagation(); onDelete(rec.id); }}
-            aria-label="Eliminar"
-          >
-            <Trash2 size={14} strokeWidth={2} />
+            <Check size={13} strokeWidth={3} />
+            {registered ? 'Registrado' : 'Registrar'}
           </button>
         </div>
       </div>
@@ -90,11 +111,11 @@ function RecurringCard({ rec, onConfirm, onDelete, onEdit }) {
   );
 }
 
-function SubscriptionCard({ rec, onDelete, onEdit }) {
+function SubscriptionCard({ rec, onEdit }) {
   const dueLabel = nextDueLabel(rec.nextDueDate);
 
   return (
-    <div className={`rec-card${dueLabel?.urgent ? ' rec-card--urgent' : ''}`} onClick={() => onEdit(rec)} style={{ cursor: 'pointer' }}>
+    <div className="rec-card" onClick={() => onEdit(rec)}>
       <div className="rec-card-left">
         <div className="rec-card-info">
           <span className="rec-card-name">{rec.description || rec.category}</span>
@@ -117,18 +138,9 @@ function SubscriptionCard({ rec, onDelete, onEdit }) {
         <span className="rec-card-amount">
           {rec.amount.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
           {' '}
-          <span className="rec-card-currency">{rec.currency}</span>
+          <span className="rec-card-currency">{getCurrencyByCode(rec.currency).symbol}</span>
         </span>
-        <div className="rec-card-actions">
-          <span className="rec-auto-badge">Auto</span>
-          <button
-            className="rec-delete-btn"
-            onClick={e => { e.stopPropagation(); onDelete(rec.id); }}
-            aria-label="Eliminar"
-          >
-            <Trash2 size={14} strokeWidth={2} />
-          </button>
-        </div>
+        <span className="rec-auto-badge">Auto</span>
       </div>
     </div>
   );
@@ -137,18 +149,32 @@ function SubscriptionCard({ rec, onDelete, onEdit }) {
 export default function RecurringListView({
   recurring = [],
   onConfirmRecurring,
+  onMarkRecurringDone,
   onUpdateRecurring,
   onDeleteRecurring,
   onAddRecurring,
   onAddSubscription,
   userCategories = [],
   accounts = [],
+  onTitleChange,
 }) {
   const [tab,     setTab]     = useState('recurring');
   const [editRec, setEditRec] = useState(null);
 
-  const recurringItems     = useMemo(() => recurring.filter(r => r.entryType === 'recurring'),     [recurring]);
-  const subscriptionItems  = useMemo(() => recurring.filter(r => r.entryType === 'subscription'),  [recurring]);
+  const handleTabChange = (newTab) => {
+    setTab(newTab);
+    onTitleChange?.(newTab === 'recurring' ? 'Total de gastos recurrentes' : 'Total de suscripciones');
+  };
+
+  const sortByDue = (items) => [...items].sort((a, b) => {
+    if (!a.nextDueDate && !b.nextDueDate) return 0;
+    if (!a.nextDueDate) return 1;
+    if (!b.nextDueDate) return -1;
+    return new Date(a.nextDueDate) - new Date(b.nextDueDate);
+  });
+
+  const recurringItems    = useMemo(() => sortByDue(recurring.filter(r => r.entryType === 'recurring')),    [recurring]);
+  const subscriptionItems = useMemo(() => sortByDue(recurring.filter(r => r.entryType === 'subscription')), [recurring]);
 
   const active = tab === 'recurring' ? recurringItems : subscriptionItems;
   const isEmpty = active.length === 0;
@@ -156,41 +182,37 @@ export default function RecurringListView({
   return (
     <div className="rec-view">
 
+      {/* Hero */}
+      <div className="rec-hero">
+        <span className="rec-hero-count">{active.length}</span>
+      </div>
+
       {/* Tabs */}
       <div className="rec-tabs">
         <button
           className={`rec-tab${tab === 'recurring' ? ' active' : ''}`}
-          onClick={() => setTab('recurring')}
+          onClick={() => handleTabChange('recurring')}
         >
           Gastos recurrentes
-          {recurringItems.length > 0 && (
-            <span className="rec-tab-badge">{recurringItems.length}</span>
-          )}
         </button>
         <button
           className={`rec-tab${tab === 'subscription' ? ' active' : ''}`}
-          onClick={() => setTab('subscription')}
+          onClick={() => handleTabChange('subscription')}
         >
           Suscripciones
-          {subscriptionItems.length > 0 && (
-            <span className="rec-tab-badge">{subscriptionItems.length}</span>
-          )}
         </button>
       </div>
 
       {/* List */}
       <div className="rec-list">
         {isEmpty ? (
-          <div className="rec-empty">
-            <p className="rec-empty-title">
-              {tab === 'recurring' ? 'Sin gastos recurrentes' : 'Sin suscripciones'}
-            </p>
-            <p className="rec-empty-desc">
-              {tab === 'recurring'
-                ? 'Agrega los pagos que haces regularmente y la app te recordará cuando toca pagarlos.'
-                : 'Agrega tus suscripciones y la app las registrará automáticamente cada período.'}
-            </p>
-          </div>
+          <EmptyState
+            Icon={CalendarClock}
+            title={tab === 'recurring' ? 'Sin gastos recurrentes' : 'Sin suscripciones'}
+            description={tab === 'recurring'
+              ? 'Agrega los pagos que haces regularmente y la app te recordará cuando toca pagarlos.'
+              : 'Agrega tus suscripciones y la app las registrará automáticamente cada período.'}
+          />
         ) : (
           active.map(rec =>
             tab === 'recurring' ? (
@@ -198,14 +220,13 @@ export default function RecurringListView({
                 key={rec.id}
                 rec={rec}
                 onConfirm={onConfirmRecurring}
-                onDelete={onDeleteRecurring}
+                onMarkDone={onMarkRecurringDone}
                 onEdit={setEditRec}
               />
             ) : (
               <SubscriptionCard
                 key={rec.id}
                 rec={rec}
-                onDelete={onDeleteRecurring}
                 onEdit={setEditRec}
               />
             )

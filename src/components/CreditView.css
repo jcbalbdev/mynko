@@ -53,7 +53,7 @@
   min-height: 44px;
   align-self: stretch;
   border-radius: var(--radius-full);
-  background: #7C3AED;
+  background: var(--color-purple);
   flex-shrink: 0;
 }
 .credit-card-item-body {
@@ -80,7 +80,7 @@
 .credit-card-item-debt {
   font-size: 15px;
   font-weight: 800;
-  color: #7C3AED;
+  color: var(--color-purple);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -93,7 +93,7 @@
 .credit-card-item-bar-fill {
   height: 100%;
   border-radius: var(--radius-full);
-  background: #7C3AED;
+  background: var(--color-purple);
   transition: width 0.4s ease;
 }
 .credit-card-item-footer {
@@ -141,8 +141,8 @@
   box-shadow: 0 6px 20px rgba(0,0,0,.22);
 }
 .credit-fab-pill:active { transform: scale(0.96); opacity: 0.85; }
-.credit-fab-pill--charge { background: #7C3AED; }
-.credit-fab-pill--pay    { background: #1a7a34; }
+.credit-fab-pill--charge { background: var(--color-purple); }
+.credit-fab-pill--pay    { background: var(--color-success); }
 
 /* Interest section inside drill card */
 .credit-drill-interest {
@@ -268,11 +268,11 @@
 .credit-drill-action-btn:active { opacity: 0.75; }
 .credit-drill-action-btn--charge {
   background: rgba(124,58,237,.12);
-  color: #7C3AED;
+  color: var(--color-purple);
 }
 .credit-drill-action-btn--payment {
   background: rgba(52,199,89,.12);
-  color: #1a7a34;
+  color: var(--color-success);
 }
 
 /* Empty drill state */
@@ -320,8 +320,8 @@
   justify-content: center;
   flex-shrink: 0;
 }
-.credit-timeline-icon--charge  { background: rgba(124,58,237,.12); color: #7C3AED; }
-.credit-timeline-icon--payment { background: rgba(52,199,89,.12);  color: #1a7a34; }
+.credit-timeline-icon--charge  { background: rgba(124,58,237,.12); color: var(--color-purple); }
+.credit-timeline-icon--payment { background: rgba(52,199,89,.12);  color: var(--color-success); }
 .credit-timeline-info {
   flex: 1;
   min-width: 0;
@@ -347,7 +347,7 @@
 }
 .credit-timeline-badge {
   background: rgba(124,58,237,.1);
-  color: #7C3AED;
+  color: var(--color-purple);
   font-size: 10px;
   font-weight: 800;
   padding: 2px 7px;
@@ -358,5 +358,5 @@
   font-weight: 800;
   flex-shrink: 0;
 }
-.credit-timeline-amount--charge  { color: #7C3AED; }
-.credit-timeline-amount--payment { color: #1a7a34; }
+.credit-timeline-amount--charge  { color: var(--color-purple); }
+.credit-timeline-amount--payment { color: var(--color-success); }

@@ -1,0 +1,591 @@
+/* ══════════════════════════════════════
+   ONBOARDING SCREEN
+══════════════════════════════════════ */
+
+.onboarding-screen {
+  min-height: 100vh;  /* fallback for older Android WebViews without dvh support */
+  min-height: 100dvh;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-lg);
+  overflow-y: auto;
+}
+
+.onb-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding-top: var(--space-xl);
+}
+
+.onb-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.onb-logo img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  margin-bottom: 4px;
+}
+
+.onb-title {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  color: var(--label-primary);
+  margin: 0;
+}
+
+.onb-subtitle {
+  font-size: 15px;
+  color: var(--label-secondary);
+  margin: 0;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* ── Cards ── */
+.onb-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.onb-account-card {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl);
+  padding: 16px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.onb-account-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.onb-account-icon {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.onb-name-field {
+  flex: 1;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--label-primary);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  outline: none;
+  padding: 2px 0;
+  transition: border-color 0.15s;
+  min-width: 0;
+}
+.onb-name-field:focus {
+  border-bottom-color: var(--blue);
+}
+.onb-name-field::placeholder {
+  color: var(--label-quaternary);
+}
+
+.onb-remove-btn {
+  background: var(--bg-tertiary);
+  border: none;
+  border-radius: var(--radius-full);
+  width: 26px;
+  height: 26px;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--label-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.onb-remove-btn:active { background: var(--bg-tertiary); filter: brightness(0.9); }
+
+.onb-balance-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  padding: 10px 14px;
+}
+
+.onb-currency-btn {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--label-tertiary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.onb-currency-btn:active { color: var(--label-secondary); }
+
+.onb-currency-chevron {
+  font-size: 10px;
+  margin-top: 1px;
+}
+
+/* ── Currency Picker ── */
+.onb-currency-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+}
+
+.onb-currency-sheet {
+  width: 100%;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding-bottom: calc(var(--space-lg) + var(--safe-bottom));
+  max-height: 70vh;  /* fallback for older Android WebViews without dvh support */
+  max-height: 70dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.onb-currency-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--separator);
+  flex-shrink: 0;
+}
+
+.onb-currency-sheet-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--label-primary);
+}
+
+.onb-currency-close {
+  background: var(--bg-tertiary);
+  border: none;
+  border-radius: var(--radius-full);
+  width: 28px;
+  height: 28px;
+  font-size: 13px;
+  color: var(--label-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.onb-currency-search {
+  margin: 0 16px 8px;
+  padding: 10px 14px;
+  border: 1.5px solid rgba(0,0,0,0.1);
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: var(--font);
+  background: var(--bg-secondary, #f2f2f7);
+  color: var(--label);
+  outline: none;
+  width: calc(100% - 32px);
+  box-sizing: border-box;
+}
+.onb-currency-search:focus {
+  border-color: #FEA503;
+}
+
+.onb-currency-list {
+  overflow-y: auto;
+  flex: 1;
+  padding: 8px 0;
+}
+
+.onb-currency-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 20px;
+  background: none;
+  border: none;
+  font-family: var(--font);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+}
+.onb-currency-item:active { background: var(--fill-tertiary); }
+.onb-currency-item.active .onb-currency-item-code { color: var(--blue); }
+
+.onb-currency-item-code {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--label-primary);
+  min-width: 44px;
+}
+
+.onb-currency-item-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--label-secondary);
+}
+
+.onb-currency-item-check {
+  font-size: 16px;
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.onb-balance-field {
+  flex: 1;
+  font-family: var(--font);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--label-primary);
+  background: transparent;
+  border: none;
+  outline: none;
+  caret-color: var(--blue);
+  min-width: 0;
+}
+.onb-balance-field::placeholder {
+  color: var(--label-quaternary);
+  font-weight: 600;
+}
+
+/* ── Dotted add card ── */
+.onb-add-card {
+  background: transparent;
+  border: 2px dashed var(--label-quaternary);
+  border-radius: var(--radius-xl);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: border-color 0.15s, background 0.15s;
+}
+.onb-add-card:active {
+  background: var(--fill-tertiary);
+  border-color: var(--label-tertiary);
+}
+
+.onb-add-icon {
+  font-size: 28px;
+  font-weight: 300;
+  color: var(--label-tertiary);
+  line-height: 1;
+}
+
+.onb-add-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--label-tertiary);
+}
+
+/* ── Footer ── */
+.onb-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: var(--space-lg);
+  padding-bottom: calc(var(--space-lg) + var(--safe-bottom));
+}
+
+.onb-submit-btn {
+  width: 100%;
+  background: #FEA503;
+  color: #1A1A2A;
+  border: none;
+  border-radius: var(--radius-xl);
+  padding: 15px;
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(.34,1.56,.64,1), box-shadow 0.15s;
+  box-shadow: 0 6px 20px rgba(0,0,0,.25);
+}
+.onb-submit-btn:active  { transform: scale(0.97); }
+.onb-submit-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+.onb-skip-btn {
+  background: none;
+  border: none;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--label-tertiary);
+  cursor: pointer;
+  text-align: center;
+  padding: 4px;
+  transition: color 0.15s;
+}
+.onb-skip-btn:hover  { color: var(--label-secondary); }
+.onb-skip-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ══════════════════════════════════════
+   STEP 2 — CATEGORY SELECTION
+══════════════════════════════════════ */
+
+.onb-cat-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.onb-cat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.onb-cat-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--bg-secondary);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-xl);
+  font-family: var(--font);
+  cursor: pointer;
+  text-align: left;
+  box-shadow: var(--shadow-card);
+  transition: border-color 0.15s, background 0.15s;
+}
+.onb-cat-chip:active { opacity: 0.8; }
+
+.onb-cat-chip-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.onb-cat-chip-label {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--label-tertiary);
+  transition: color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.onb-cat-chip.on .onb-cat-chip-label {
+  color: inherit;
+}
+
+.onb-cat-chip-edit {
+  background: rgba(255,255,255,0.25);
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  color: #fff;
+  padding: 0;
+  margin-left: 2px;
+}
+.onb-cat-chip-edit:active { background: rgba(255,255,255,0.4); }
+
+/* ── Custom parent row ── */
+.onb-custom-parent-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl);
+  padding: 13px 16px;
+  box-shadow: var(--shadow-card);
+}
+
+.onb-custom-parent-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--label-primary);
+}
+
+/* ── New category form ── */
+.onb-custom-form {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--shadow-card);
+}
+
+.onb-custom-name-input {
+  width: 100%;
+  background: var(--bg-primary);
+  border: none;
+  outline: none;
+  border-radius: var(--radius-lg);
+  padding: 11px 14px;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--label-primary);
+  caret-color: var(--blue);
+  box-sizing: border-box;
+}
+.onb-custom-name-input::placeholder { color: var(--label-quaternary); font-weight: 500; }
+
+.onb-color-grid {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.onb-color-grid::-webkit-scrollbar { display: none; }
+
+.onb-color-dot {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: opacity 0.15s;
+}
+.onb-color-dot:active { opacity: 0.75; }
+.onb-color-dot.selected::after {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+  line-height: 30px;
+}
+
+/* ── Pill add button (dashed) ── */
+.onb-cat-chip-add {
+  border: 2px dashed rgba(0,0,0,0.15) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* ── New category sheet body ── */
+.onb-sheet-body {
+  padding: 16px 20px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.onb-sheet-section-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--label-secondary);
+  margin-bottom: -4px;
+}
+
+.onb-sheet-delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  background: rgba(255, 59, 48, 0.08);
+  color: #ff3b30;
+  border: none;
+  border-radius: var(--radius-xl);
+  padding: 14px;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.onb-sheet-delete-btn:active { background: rgba(255, 59, 48, 0.16); }
+
+.onb-sheet-create-btn {
+  width: 100%;
+  background: #FEA503;
+  color: #1A1A2A;
+  border: none;
+  border-radius: var(--radius-xl);
+  padding: 15px;
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.onb-sheet-create-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.onb-sheet-create-btn:active { opacity: 0.85; }
+
+.onb-custom-form-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.onb-custom-cancel {
+  flex: 1;
+  background: var(--bg-tertiary);
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 11px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--label-secondary);
+  cursor: pointer;
+}
+
+.onb-custom-create {
+  flex: 1;
+  background: var(--color-dark);
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 11px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.onb-custom-create:disabled { opacity: 0.3; cursor: default; }

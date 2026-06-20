@@ -1,13 +1,11 @@
-/**
- * ProfileSheet.jsx
- * Two-tab sheet: "Perfil" (user info + currency) and "Categorías" (subcategory manager).
- */
-import React, { useState } from 'react';
-import { Mail, CalendarDays } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { User, Tag, Bell, Palette, Mail, CalendarDays, ChevronRight, LayoutList, Sun, Moon, Monitor, Check, Target } from 'lucide-react';
 import './ProfileSheet.css';
 import BaseSheet                    from './ui/BaseSheet';
 import CurrencyPicker               from './ui/CurrencyPicker';
 import CategoriesManagerView        from './ui/CategoriesManagerView';
+import MenuConfigView               from '../components/MenuConfigView';
+import BudgetsManagerView           from '../components/BudgetsManagerView';
 import { useNotificationSettings }  from '../hooks/useNotificationSettings';
 import { useTheme }                 from '../context/ThemeContext';
 
@@ -38,6 +36,15 @@ function NotifGroup({ title, children }) {
   );
 }
 
+const SETTINGS_ITEMS = [
+  { id: 'perfil',         Icon: User,       label: 'Perfil',        desc: 'Tu información y moneda por defecto'        },
+  { id: 'categorias',     Icon: Tag,        label: 'Categorías',    desc: 'Gestiona tus categorías personalizadas'     },
+  { id: 'presupuestos',   Icon: Target,     label: 'Presupuestos',  desc: 'Límites de gasto por categoría'            },
+  { id: 'notificaciones', Icon: Bell,       label: 'Alertas',       desc: 'Notificaciones y recordatorios'             },
+  { id: 'tema',           Icon: Palette,    label: 'Tema',          desc: 'Apariencia de la aplicación'                },
+  { id: 'menu',           Icon: LayoutList, label: 'Menú',          desc: 'Orden y visibilidad de las secciones'       },
+];
+
 export default function ProfileSheet({
   user,
   onClose,
@@ -47,10 +54,25 @@ export default function ProfileSheet({
   userCategories,
   onCreateSubcategory,
   onDeleteSubcategory,
+  onCreateParentCategory,
+  onUpdateCategoryColor,
+  onUpdateSystemCategoryColor,
   yapePermission = false,
   onRequestYapePermission,
+  navViews        = [],
+  menuConfig      = { order: [], hidden: [] },
+  onMenuToggleHidden,
+  onMenuReorder,
+  budgets         = [],
+  onAddBudget,
+  onUpdateBudget,
+  onDeleteBudget,
+  expenses        = [],
 }) {
-  const [tab, setTab] = useState('perfil');
+  const [section,       setSection]       = useState(null);
+  const [catSubTitle,   setCatSubTitle]   = useState(null);
+  const [budgetSubTitle, setBudgetSubTitle] = useState(null);
+  const backOverrideRef = useRef(null);
   const { settings, toggle } = useNotificationSettings(user?.id);
   const { theme, setTheme } = useTheme();
 
@@ -63,24 +85,60 @@ export default function ProfileSheet({
 
   const handleSignOut = () => { onSignOut(); onClose(); };
 
-  const tabTitle = tab === 'perfil'       ? 'Mi perfil'
-                 : tab === 'categorias'  ? 'Categorías'
-                 : tab === 'tema'        ? 'Tema'
-                 : 'Notificaciones';
+  function handleBack() {
+    if (backOverrideRef.current) {
+      backOverrideRef.current();
+      return;
+    }
+    setSection(null);
+    setCatSubTitle(null);
+    setBudgetSubTitle(null);
+    backOverrideRef.current = null;
+  }
+
+  const sectionTitle = catSubTitle !== null            ? catSubTitle
+                     : budgetSubTitle !== null         ? budgetSubTitle
+                     : section === 'perfil'            ? 'Perfil'
+                     : section === 'categorias'        ? 'Categorías'
+                     : section === 'presupuestos'      ? 'Presupuestos'
+                     : section === 'notificaciones'    ? 'Alertas'
+                     : section === 'tema'              ? 'Tema'
+                     : section === 'menu'              ? 'Menú'
+                     : 'Configuración';
 
   return (
-    <BaseSheet title={tabTitle} onClose={onClose}>
+    <BaseSheet
+      title={sectionTitle}
+      onClose={onClose}
+      onBack={section ? handleBack : undefined}
+    >
 
-      {/* Tab bar */}
-      <div className="profile-tabs">
-        <button className={`profile-tab${tab === 'perfil' ? ' active' : ''}`} onClick={() => setTab('perfil')} id="tab-profile">Perfil</button>
-        <button className={`profile-tab${tab === 'categorias' ? ' active' : ''}`} onClick={() => setTab('categorias')} id="tab-categories">Categorías</button>
-        <button className={`profile-tab${tab === 'notificaciones' ? ' active' : ''}`} onClick={() => setTab('notificaciones')} id="tab-notifications">Alertas</button>
-        <button className={`profile-tab${tab === 'tema' ? ' active' : ''}`} onClick={() => setTab('tema')} id="tab-theme">Tema</button>
-      </div>
+      {/* ── Lista principal ── */}
+      {!section && (
+        <div className="config-sheet-list">
+          {SETTINGS_ITEMS.map((item, i) => (
+            <React.Fragment key={item.id}>
+              <button
+                className="config-sheet-item"
+                onClick={() => setSection(item.id)}
+                id={`config-item-${item.id}`}
+              >
+                <span className="config-sheet-item-icon-wrap">
+                  <item.Icon size={16} strokeWidth={2} className="config-sheet-item-icon" />
+                </span>
+                <span className="config-sheet-item-text">
+                  <span className="config-sheet-item-label">{item.label}</span>
+                  <span className="config-sheet-item-desc">{item.desc}</span>
+                </span>
+                <ChevronRight size={16} strokeWidth={2.5} className="config-sheet-item-chevron" />
+              </button>
+            </React.Fragment>
+          ))}
+        </div>
+      )}
 
-      {/* ── Perfil tab ── */}
-      {tab === 'perfil' && (
+      {/* ── Perfil ── */}
+      {section === 'perfil' && (
         <div className="profile-sheet-body">
           <div className="profile-avatar-lg">
             {email ? email[0].toUpperCase() : '?'}
@@ -116,17 +174,36 @@ export default function ProfileSheet({
         </div>
       )}
 
-      {/* ── Categorías tab ── */}
-      {tab === 'categorias' && (
+      {/* ── Categorías ── */}
+      {section === 'categorias' && (
         <CategoriesManagerView
           userCategories={userCategories ?? []}
           onCreateSubcategory={onCreateSubcategory}
           onDeleteSubcategory={onDeleteSubcategory}
+          onCreateParentCategory={onCreateParentCategory}
+          onUpdateCategoryColor={onUpdateCategoryColor}
+          onUpdateSystemCategoryColor={onUpdateSystemCategoryColor}
+          onTitleChange={setCatSubTitle}
         />
       )}
 
-      {/* ── Notificaciones tab ── */}
-      {tab === 'notificaciones' && (
+      {/* ── Presupuestos ── */}
+      {section === 'presupuestos' && (
+        <BudgetsManagerView
+          budgets={budgets}
+          userCategories={userCategories ?? []}
+          defaultCurrency={defaultCurrency ?? 'MXN'}
+          expenses={expenses}
+          onAdd={onAddBudget}
+          onUpdate={onUpdateBudget}
+          onDelete={onDeleteBudget}
+          onTitleChange={setBudgetSubTitle}
+          onSetBack={(fn) => { backOverrideRef.current = fn; }}
+        />
+      )}
+
+      {/* ── Alertas ── */}
+      {section === 'notificaciones' && (
         <div className="profile-sheet-body">
 
           <NotifGroup title="Integraciones">
@@ -139,67 +216,69 @@ export default function ProfileSheet({
           </NotifGroup>
 
           <NotifGroup title="Diarias">
-            <NotifRow label="☀️ Buenos días" description="8am — arrancar el día registrando" checked={settings.daily_morning} onToggle={() => toggle('daily_morning')} />
+            <NotifRow label="Buenos días" description="8am — arrancar el día registrando" checked={settings.daily_morning} onToggle={() => toggle('daily_morning')} />
             <div className="notif-divider" />
-            <NotifRow label="🌙 Recordatorio noche" description="9pm si no registraste nada hoy" checked={settings.daily_night} onToggle={() => toggle('daily_night')} />
+            <NotifRow label="Recordatorio noche" description="9pm si no registraste nada hoy" checked={settings.daily_night} onToggle={() => toggle('daily_night')} />
           </NotifGroup>
 
           <NotifGroup title="Semanales">
-            <NotifRow label="📊 Resumen semanal" description="Lunes — total y categoría más alta" checked={settings.weekly_summary} onToggle={() => toggle('weekly_summary')} />
+            <NotifRow label="Resumen semanal" description="Lunes — total y categoría más alta" checked={settings.weekly_summary} onToggle={() => toggle('weekly_summary')} />
             <div className="notif-divider" />
-            <NotifRow label="📈 Comparación semanal" description="Lunes — esta semana vs la anterior" checked={settings.weekly_compare} onToggle={() => toggle('weekly_compare')} />
+            <NotifRow label="Comparación semanal" description="Lunes — esta semana vs la anterior" checked={settings.weekly_compare} onToggle={() => toggle('weekly_compare')} />
           </NotifGroup>
 
           <NotifGroup title="Mensual">
-            <NotifRow label="🗓️ Cierre de mes" description="Día 1 — resumen del mes anterior" checked={settings.month_close} onToggle={() => toggle('month_close')} />
+            <NotifRow label="Cierre de mes" description="Día 1 — resumen del mes anterior" checked={settings.month_close} onToggle={() => toggle('month_close')} />
           </NotifGroup>
 
           <NotifGroup title="Logros">
-            <NotifRow label="✅ Balance positivo" description="3 semanas consecutivas en verde" checked={settings.positive_balance} onToggle={() => toggle('positive_balance')} />
+            <NotifRow label="Balance positivo" description="3 semanas consecutivas en verde" checked={settings.positive_balance} onToggle={() => toggle('positive_balance')} />
             <div className="notif-divider" />
-            <NotifRow label="🔥 Racha de registro" description="Al cumplir 7, 14 o 30 días seguidos" checked={settings.streak} onToggle={() => toggle('streak')} />
+            <NotifRow label="Racha de registro" description="Al cumplir 7, 14 o 30 días seguidos" checked={settings.streak} onToggle={() => toggle('streak')} />
             <div className="notif-divider" />
-            <NotifRow label="👋 Si me ausento" description="72h sin registrar nada" checked={settings.re_engagement} onToggle={() => toggle('re_engagement')} />
+            <NotifRow label="Si me ausento" description="72h sin registrar nada" checked={settings.re_engagement} onToggle={() => toggle('re_engagement')} />
           </NotifGroup>
 
           <NotifGroup title="Gastos recurrentes">
-            <NotifRow label="💸 Recordatorio de pago" description="El día que toca confirmar un gasto recurrente" checked={settings.recurring_reminder} onToggle={() => toggle('recurring_reminder')} />
+            <NotifRow label="Recordatorio de pago" description="El día que toca confirmar un gasto recurrente" checked={settings.recurring_reminder} onToggle={() => toggle('recurring_reminder')} />
           </NotifGroup>
 
           <NotifGroup title="Suscripciones">
-            <NotifRow label="📅 3 días antes del cobro" description="Aviso previo para que tengas saldo" checked={settings.subscription_before_3days} onToggle={() => toggle('subscription_before_3days')} />
+            <NotifRow label="3 días antes del cobro" description="Aviso previo para que tengas saldo" checked={settings.subscription_before_3days} onToggle={() => toggle('subscription_before_3days')} />
             <div className="notif-divider" />
-            <NotifRow label="⏰ 1 día antes del cobro" description="Recordatorio el día previo al cargo" checked={settings.subscription_before_1day} onToggle={() => toggle('subscription_before_1day')} />
+            <NotifRow label="1 día antes del cobro" description="Recordatorio el día previo al cargo" checked={settings.subscription_before_1day} onToggle={() => toggle('subscription_before_1day')} />
             <div className="notif-divider" />
-            <NotifRow label="✅ Cobro registrado" description="Confirmación cuando se registra automáticamente" checked={settings.subscription_charged} onToggle={() => toggle('subscription_charged')} />
+            <NotifRow label="Cobro registrado" description="Confirmación cuando se registra automáticamente" checked={settings.subscription_charged} onToggle={() => toggle('subscription_charged')} />
             <div className="notif-divider" />
-            <NotifRow label="📊 Hitos anuales" description="A los 3 y 6 meses de tu suscripción anual" checked={settings.subscription_annual_milestone} onToggle={() => toggle('subscription_annual_milestone')} />
+            <NotifRow label="Hitos anuales" description="A los 3 y 6 meses de tu suscripción anual" checked={settings.subscription_annual_milestone} onToggle={() => toggle('subscription_annual_milestone')} />
             <div className="notif-divider" />
-            <NotifRow label="🔔 Vencimiento anual" description="3 meses, 1 mes, 1 semana, 3 días y 1 día antes de renovar" checked={settings.subscription_annual_expiry} onToggle={() => toggle('subscription_annual_expiry')} />
+            <NotifRow label="Vencimiento anual" description="3 meses, 1 mes, 1 semana, 3 días y 1 día antes de renovar" checked={settings.subscription_annual_expiry} onToggle={() => toggle('subscription_annual_expiry')} />
           </NotifGroup>
         </div>
       )}
 
-      {/* ── Tema tab ── */}
-      {tab === 'tema' && (
+      {/* ── Tema ── */}
+      {section === 'tema' && (
         <div className="profile-sheet-body">
           <div className="theme-picker-group">
             {[
-              { value: 'claro',   label: 'Claro',   icon: '☀️' },
-              { value: 'oscuro',  label: 'Oscuro',  icon: '🌙' },
-              { value: 'sistema', label: 'Sistema', icon: '⚙️' },
+              { value: 'claro',   label: 'Claro',   Icon: Sun     },
+              { value: 'oscuro',  label: 'Oscuro',  Icon: Moon    },
+              { value: 'sistema', label: 'Sistema', Icon: Monitor },
             ].map((opt, i, arr) => (
               <React.Fragment key={opt.value}>
                 <button
                   className={`theme-option-row${theme === opt.value ? ' active' : ''}`}
                   onClick={() => setTheme(opt.value)}
                 >
-                  <span className="theme-option-icon">{opt.icon}</span>
+                  <span className="theme-option-icon">
+                    <opt.Icon size={18} strokeWidth={2} />
+                  </span>
                   <span className="theme-option-label">{opt.label}</span>
                   {theme === opt.value && (
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <path d="M3 9l4.5 4.5L15 5" stroke="#007aff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
+                    <span className="theme-option-check">
+                      <Check size={12} strokeWidth={3} />
+                    </span>
                   )}
                 </button>
                 {i < arr.length - 1 && <div className="theme-option-divider" />}
@@ -208,6 +287,17 @@ export default function ProfileSheet({
           </div>
         </div>
       )}
+
+      {/* ── Menú ── */}
+      {section === 'menu' && (
+        <MenuConfigView
+          navViews={navViews}
+          config={menuConfig}
+          onToggleHidden={onMenuToggleHidden}
+          onReorder={onMenuReorder}
+        />
+      )}
+
 
     </BaseSheet>
   );

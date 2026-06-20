@@ -3,23 +3,42 @@
  * Positioned next to the pressed bar. No padding on card — items fill
  * edge-to-edge and overflow:hidden clips to the card's border-radius.
  */
-import React from 'react';
+import React, { useEffect } from 'react';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { resolveCategory } from '../utils/categories';
 import { useUserCategoriesCtx } from '../context/UserCategoriesContext';
+import { useTheme } from '../context/ThemeContext';
 
 const CARD_W = 210;
 const ITEM_H = 50;
 
 export default function QuickAddModal({ parentCategoryId, barRect, hoveredId, onClose }) {
+  const { theme } = useTheme();
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const userCategories = useUserCategoriesCtx();
   const parentCat  = resolveCategory(parentCategoryId, userCategories);
   const subcats    = userCategories.filter(uc => uc.parent_id === parentCategoryId);
   const hoverColor = parentCat.bg ?? parentCat.color ?? '#111214'; // category color for selection
+  const isSubcat   = userCategories.some(
+    uc => uc.id === parentCategoryId && uc.parent_id && uc.parent_id !== '__override__'
+  );
 
-  const options = [
-    { id: parentCategoryId, label: parentCat.label, isParent: true },
-    ...subcats.map(sc => ({ id: sc.id, label: sc.name, isParent: false })),
-  ];
+  const options = isSubcat
+    ? [
+        { id: '__budget__', label: 'Presupuesto', isBudget: true },
+        { id: parentCategoryId, label: parentCat.label, isParent: false },
+      ]
+    : [
+        { id: '__budget__', label: 'Presupuesto', isBudget: true },
+        { id: parentCategoryId, label: parentCat.label, isParent: true },
+        ...subcats.map(sc => ({ id: sc.id, label: sc.name, isParent: false })),
+      ];
+
+  useEffect(() => {
+    if (hoveredId != null) {
+      Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+    }
+  }, [hoveredId]);
 
   const CARD_H = options.length * ITEM_H;
 
@@ -52,7 +71,7 @@ export default function QuickAddModal({ parentCategoryId, barRect, hoveredId, on
           top, left,
           width: CARD_W,
           zIndex: 401,
-          background: '#ffffff',
+          background: isDark ? '#333335' : '#ffffff',
           borderRadius: 16,
           boxShadow: '0 16px 50px rgba(0,0,0,0.22), 0 3px 12px rgba(0,0,0,0.10)',
           overflow: 'hidden',
@@ -61,6 +80,7 @@ export default function QuickAddModal({ parentCategoryId, barRect, hoveredId, on
       >
         {options.map((opt, idx) => {
           const isHovered = hoveredId === opt.id;
+          const bgColor   = opt.isBudget ? '#10B981' : hoverColor;
           // Show divider only when neither this nor the previous item is hovered
           const showDivider = idx > 0
             && hoveredId !== opt.id
@@ -71,7 +91,7 @@ export default function QuickAddModal({ parentCategoryId, barRect, hoveredId, on
               {showDivider && (
                 <div style={{
                   height: '0.5px',
-                  background: 'rgba(60,60,67,0.12)',
+                  background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(60,60,67,0.12)',
                   margin: '0 16px',
                 }} />
               )}
@@ -83,8 +103,7 @@ export default function QuickAddModal({ parentCategoryId, barRect, hoveredId, on
                   justifyContent: 'space-between',
                   height: ITEM_H,
                   padding: '0 16px',
-                  // Full-width black when hovered — no padding on card so this fills edge-to-edge
-                  background: isHovered ? hoverColor : 'transparent',
+                  background: isHovered ? bgColor : 'transparent',
                   transition: 'background 0.06s',
                 }}
               >
@@ -93,7 +112,7 @@ export default function QuickAddModal({ parentCategoryId, barRect, hoveredId, on
                   style={{
                     fontSize: 15,
                     fontWeight: 700,
-                    color: isHovered ? '#ffffff' : '#1c1c1e',
+                    color: isHovered ? '#ffffff' : (opt.isBudget ? '#10B981' : (isDark ? '#fff' : '#1c1c1e')),
                     fontFamily: 'var(--font, Nunito, sans-serif)',
                     pointerEvents: 'none',
                     transition: 'color 0.06s',

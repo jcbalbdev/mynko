@@ -15,28 +15,22 @@ import { supabase } from '../lib/supabase';
 /* ── Normalize a DB row → JS object ── */
 function rowToAccount(row) {
   return {
-    id:          row.id,
-    name:        row.name,
-    type:        row.type,
-    currency:    row.currency ?? 'MXN',
-    balance:     Number(row.balance ?? 0),
-    hasBeenSet:  row.has_been_set ?? false,
-    createdAt:   row.created_at,
-    isCredit:    row.is_credit    ?? false,
-    creditLimit: row.credit_limit != null ? Number(row.credit_limit) : null,
-    cutDay:      row.cut_day      ?? null,
-    paymentDay:  row.payment_day  ?? null,
-    tcea:        row.tcea         != null ? Number(row.tcea) : null,
+    id:                  row.id,
+    name:                row.name,
+    type:                row.type,
+    currency:            row.currency ?? 'MXN',
+    balance:             Number(row.balance ?? 0),
+    hasBeenSet:          row.has_been_set ?? false,
+    createdAt:           row.created_at,
+    isCredit:            row.is_credit    ?? false,
+    creditLimit:         row.credit_limit != null ? Number(row.credit_limit) : null,
+    cutDay:              row.cut_day      ?? null,
+    paymentDay:          row.payment_day  ?? null,
+    tcea:                row.tcea         != null ? Number(row.tcea) : null,
+    minBalanceEnabled:   row.min_balance_enabled   ?? false,
+    minBalanceThreshold: row.min_balance_threshold != null ? Number(row.min_balance_threshold) : null,
+    minBalanceNotified:  row.min_balance_notified  ?? false,
   };
-}
-
-/* ── Default accounts created for every new user ── */
-function buildDefaultAccounts(userId, currency) {
-  return [
-    { user_id: userId, name: 'Mi Efectivo',  type: 'efectivo', currency, balance: 0, has_been_set: false },
-    { user_id: userId, name: 'Mi Banco',     type: 'banco',    currency, balance: 0, has_been_set: false },
-    { user_id: userId, name: 'Mis Ahorros',  type: 'ahorro',   currency, balance: 0, has_been_set: false },
-  ];
 }
 
 /* ══════════════════════════════════════
@@ -70,27 +64,6 @@ export function useAccounts(userId, defaultCurrency = 'MXN') {
 
   /* Fetch on mount and when userId changes */
   useEffect(() => { fetchAccounts(); }, [fetchAccounts]);
-
-  /* ── INIT DEFAULT ACCOUNTS (only if user has none) ── */
-  const initDefaultAccounts = useCallback(async () => {
-    if (!userId) return;
-
-    const { data } = await supabase
-      .from('accounts')
-      .select('id')
-      .eq('user_id', userId)
-      .limit(1);
-
-    if (data && data.length === 0) {
-      const defaults = buildDefaultAccounts(userId, defaultCurrency);
-      const { error } = await supabase.from('accounts').insert(defaults);
-      if (error) {
-        console.error('[useAccounts] initDefaultAccounts error:', error.message);
-      } else {
-        await fetchAccounts();
-      }
-    }
-  }, [userId, defaultCurrency, fetchAccounts]);
 
   /* ── CREATE ── */
   const createAccount = async ({ name, type, currency, balance, isCredit, creditLimit, cutDay, paymentDay, tcea, hasBeenSet }) => {
@@ -136,7 +109,10 @@ export function useAccounts(userId, defaultCurrency = 'MXN') {
     if (fields.creditLimit !== undefined) payload.credit_limit = fields.creditLimit;
     if (fields.cutDay      !== undefined) payload.cut_day      = fields.cutDay;
     if (fields.paymentDay  !== undefined) payload.payment_day  = fields.paymentDay;
-    if (fields.tcea        !== undefined) payload.tcea         = fields.tcea;
+    if (fields.tcea               !== undefined) payload.tcea                = fields.tcea;
+    if (fields.minBalanceEnabled   !== undefined) payload.min_balance_enabled   = fields.minBalanceEnabled;
+    if (fields.minBalanceThreshold !== undefined) payload.min_balance_threshold = fields.minBalanceThreshold;
+    if (fields.minBalanceNotified  !== undefined) payload.min_balance_notified  = fields.minBalanceNotified;
 
     // Optimistic update
     setAccounts(prev => prev.map(a =>
@@ -187,7 +163,6 @@ export function useAccounts(userId, defaultCurrency = 'MXN') {
     loading,
     error,
     fetchAccounts,
-    initDefaultAccounts,
     createAccount,
     updateAccount,
     deleteAccount,

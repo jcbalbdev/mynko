@@ -12,9 +12,23 @@ import FormSection  from './ui/FormSection';
 import AccountPicker from './ui/AccountPicker';
 import { getCurrencyByCode } from '../utils/currencies';
 
-export default function TransferSheet({ accounts = [], onTransfer, onClose }) {
-  const [fromId,       setFromId]       = useState(accounts[0]?.id ?? '');
-  const [toId,         setToId]         = useState(accounts[1]?.id ?? '');
+function getLastDestination(expenses, fromAccountId) {
+  if (!fromAccountId) return null;
+  const last = [...expenses]
+    .filter(e => e.type === 'cambio' && e.fromAccountId === fromAccountId)
+    .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+  return last?.accountId ?? null;
+}
+
+export default function TransferSheet({ accounts = [], expenses = [], fromAccountId = null, onTransfer, onClose }) {
+  const initialFromId = fromAccountId ?? accounts[0]?.id ?? '';
+  const lastDest      = getLastDestination(expenses, initialFromId);
+  const initialToId   = lastDest
+    ?? accounts.find(a => a.id !== initialFromId)?.id
+    ?? '';
+
+  const [fromId,       setFromId]       = useState(initialFromId);
+  const [toId,         setToId]         = useState(initialToId);
   const [amount,       setAmount]       = useState('');
   const [note,         setNote]         = useState('');
   const [fromPickerOpen, setFromPickerOpen] = useState(false);
@@ -112,21 +126,10 @@ export default function TransferSheet({ accounts = [], onTransfer, onClose }) {
           />
         </FormSection>
 
-        {/* ── Summary preview ── */}
-        {isValid && (
-          <div className="transfer-preview">
-            <span className="transfer-preview-from">{fromAccount?.name}</span>
-            <ArrowDown size={14} />
-            <span className="transfer-preview-to">{toAccount?.name}</span>
-            <span className="transfer-preview-amount">
-              {getCurrencyByCode(fromAccount?.currency ?? 'MXN').symbol} {parsedAmount.toFixed(2)}
-            </span>
-          </div>
-        )}
-
         <button
           type="submit"
           className="btn-primary"
+          style={{ marginTop: 'var(--space-lg)' }}
           disabled={!isValid}
           id="btn-confirm-transfer"
         >

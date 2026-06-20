@@ -11,8 +11,8 @@ import {
   groupByCategory,
   groupBySubcategory,
   filterByDrillCategory,
-  friendlyDate,
 } from '../utils/expenses';
+import { useGroupedByDate } from '../hooks/useGroupedByDate';
 import DateGroupHeader  from './ui/DateGroupHeader';
 import BarChart         from './BarChart';
 import TransactionRow   from './ui/TransactionRow';
@@ -82,17 +82,7 @@ export default function IncomeListView({
     return [...source].sort((a, b) => new Date(b.date) - new Date(a.date));
   }, [drillCategory, drillIncomes, incomes, outflows]);
 
-  const grouped = useMemo(() => {
-    const map = {};
-    combined.forEach(e => {
-      const key = friendlyDate(e.date);
-      if (!map[key]) map[key] = [];
-      map[key].push(e);
-    });
-    return map;
-  }, [combined]);
-
-  const dateKeys = Object.keys(grouped);
+  const { grouped, dateKeys } = useGroupedByDate(combined);
 
   return (
     <>
@@ -117,13 +107,14 @@ export default function IncomeListView({
             return (
               <div key={dateKey} className="exp-date-group">
                 <DateGroupHeader label={dateKey} total={Math.abs(dayTotal)} currency={currencyFilter} />
-                {dayRecords.map(record => (
-                  <TransactionRow
-                    key={`${record.id}${record._isOutflow ? '-out' : ''}`}
-                    record={record}
-                    onPress={onPress}
-                  />
-                ))}
+                <div className="exp-day-block">
+                  {dayRecords.map((record, idx) => (
+                    <React.Fragment key={`${record.id}${record._isOutflow ? '-out' : ''}`}>
+                      {idx > 0 && <div className="exp-day-divider" />}
+                      <TransactionRow record={record} onPress={onPress} />
+                    </React.Fragment>
+                  ))}
+                </div>
               </div>
             );
           })}

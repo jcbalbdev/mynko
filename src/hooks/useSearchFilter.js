@@ -1,7 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { CATEGORIES } from '../utils/categories';
-
-const MONTHS_CAP = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+import { MONTHS } from '../utils/dates';
 
 // 3 = exact, 2 = starts with, 1 = word boundary starts with, 0 = no match
 // For queries < 3 chars, only scores 2-3 are accepted (avoids noise like "an" → "Transporte")
@@ -32,27 +31,33 @@ export function useSearchFilter(expenses, userCategories, periodMode) {
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       if (dayNum >= 1 && dayNum <= daysInMonth) {
         const dateId = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-        results.push({ id: dateId, label: `${dayNum} de ${MONTHS_CAP[month]}`, type: 'date', color: '#5C6BC0', score: 3 });
+        results.push({ id: dateId, label: `${dayNum} de ${MONTHS[month]}`, type: 'date', color: '#5C6BC0', score: 3 });
       }
     }
+
+    const getColor = (catId) => {
+      const override = userCategories.find(c => c.parent_id === '__override__' && c.name === catId);
+      if (override) return override.color;
+      return CATEGORIES.find(c => c.id === catId)?.bg ?? '#8e8e93';
+    };
 
     /* ── Category suggestions ── */
     CATEGORIES.forEach(cat => {
       const score = scoreMatch(cat.label, q);
       if (score >= minScore && !seen.has(cat.id)) {
         seen.add(cat.id);
-        results.push({ id: cat.id, label: cat.label, type: 'category', color: cat.bg, score });
+        results.push({ id: cat.id, label: cat.label, type: 'category', color: getColor(cat.id), score });
       }
     });
 
     /* ── Subcategory suggestions ── */
     userCategories.forEach(sub => {
+      if (sub.parent_id === '__override__') return;
       const key = 'sub_' + sub.id;
       const score = scoreMatch(sub.name, q);
       if (score >= minScore && !seen.has(key)) {
         seen.add(key);
-        const parent = CATEGORIES.find(c => c.id === sub.parent_id);
-        results.push({ id: sub.id, label: sub.name, type: 'subcategory', color: parent?.bg ?? '#8e8e93', score });
+        results.push({ id: sub.id, label: sub.name, type: 'subcategory', color: getColor(sub.parent_id), score });
       }
     });
 

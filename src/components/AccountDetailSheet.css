@@ -2,36 +2,22 @@
    ACCOUNT DETAIL SHEET
 ══════════════════════════════════════ */
 
-.account-detail-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px var(--space-md) 20px;
-  background: color-mix(in srgb, var(--acc-color, #111214) 8%, transparent);
-  border-radius: var(--radius-lg);
-  margin: 0 var(--space-md) var(--space-md);
-}
-.account-detail-icon { width: 56px; height: 56px; border-radius: var(--radius-xl); background: color-mix(in srgb, var(--acc-color, #111214) 16%, transparent); color: var(--acc-color, #111214); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.account-detail-balance-block { display: flex; flex-direction: column; gap: 4px; }
-.account-detail-balance-label { color: var(--label-tertiary); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-.account-detail-balance-value { color: var(--label-primary); font-size: 24px; font-weight: 900; letter-spacing: -0.5px; line-height: 1; }
-.account-detail-type-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: var(--radius-full); background: color-mix(in srgb, var(--acc-color, #111214) 14%, transparent); color: var(--acc-color, #111214); font-size: 11px; font-weight: 800; letter-spacing: 0.3px; align-self: flex-start; }
-.account-balance-locked { display: flex; align-items: center; gap: 8px; padding: 13px 16px; background: var(--fill-tertiary); border-radius: var(--radius-xl); margin: 0 var(--space-md) var(--space-sm); color: var(--label-tertiary); }
-.account-balance-locked-value { font-size: 15px; font-weight: 700; color: var(--label-secondary); }
-.account-balance-locked-message { margin: 0 var(--space-md) var(--space-md); padding: 12px 14px; background: #fff9e6; border-radius: var(--radius-lg); border-left: 3px solid #FBBC05; }
-.account-balance-locked-message p { color: #7a6000; font-size: 13px; font-weight: 600; line-height: 1.5; margin: 0; }
+.account-detail-balance-hero { display: flex; flex-direction: column; align-items: center; padding: 8px var(--space-md) 24px; gap: 6px; }
+.account-detail-hero-label { color: var(--label-tertiary); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.account-detail-hero-value { color: var(--label-primary); font-size: 36px; font-weight: 900; letter-spacing: -1px; line-height: 1; }
+.account-detail-hero-value.negative { color: #EA4335; }
 /* Credit account header extras */
 .credit-progress-bar {
   width: 100%;
   height: 5px;
-  background: color-mix(in srgb, var(--acc-color, #7C3AED) 18%, transparent);
+  background: color-mix(in srgb, var(--acc-color, var(--color-purple)) 18%, transparent);
   border-radius: 99px;
   overflow: hidden;
   margin-top: 6px;
 }
 .credit-progress-fill {
   height: 100%;
-  background: var(--acc-color, #7C3AED);
+  background: var(--acc-color, var(--color-purple));
   border-radius: 99px;
   transition: width 0.3s ease;
 }
@@ -78,14 +64,64 @@
   flex-shrink: 0;
 }
 
-.account-detail-delete-section { padding: var(--space-sm) var(--space-md) var(--space-md); }
-.btn-danger-outline { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px; border-radius: var(--radius-xl); border: 1.5px solid rgba(234,67,53,.19); background: rgba(234,67,53,.06); color: #EA4335; font-family: var(--font); font-size: 14px; font-weight: 800; cursor: pointer; transition: background 0.15s, transform 0.12s; }
-.btn-danger-outline:active { background: rgba(234,67,53,.13); transform: scale(0.97); }
+.account-detail-actions { display: flex; flex-direction: column; gap: 10px; padding: var(--space-sm) var(--space-md) var(--space-md); }
+.btn-save-primary { width: 100%; padding: 15px; border-radius: var(--radius-xl); border: none; background: var(--color-dark); color: #fff; font-family: var(--font); font-size: 15px; font-weight: 800; cursor: pointer; transition: background 0.15s, transform 0.12s; }
+.btn-save-primary:active { background: #2a2a2e; transform: scale(0.97); }
+.btn-danger-solid { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 15px; border-radius: var(--radius-xl); border: none; background: #ff3b30; color: #fff; font-family: var(--font); font-size: 15px; font-weight: 800; cursor: pointer; transition: background 0.15s, transform 0.12s; }
+.btn-danger-solid:active { background: #e02d22; transform: scale(0.97); }
 .delete-confirm-box { background: var(--bg-primary); border-radius: var(--radius-xl); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 .delete-confirm-box p { color: var(--label-secondary); font-size: 14px; font-weight: 600; line-height: 1.5; margin: 0; }
 .delete-confirm-actions { display: flex; gap: 10px; }
 .btn-ghost { flex: 1; padding: 12px; border-radius: var(--radius-xl); border: none; background: var(--fill-tertiary); color: var(--label-secondary); font-family: var(--font); font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
 .btn-ghost:active { background: var(--bg-tertiary); }
+
+/* Min-balance alert section */
+.min-balance-input-wrap { transition: opacity 0.2s; }
+.min-balance-input-wrap.disabled { opacity: 0.35; pointer-events: none; }
+.min-balance-alert-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px var(--space-md) 0;
+}
+.min-balance-alert-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--label-secondary);
+}
+.toggle-switch {
+  width: 44px;
+  height: 26px;
+  border-radius: var(--radius-full);
+  background: var(--fill-tertiary, #e5e5ea);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.22s;
+  -webkit-tap-highlight-color: transparent;
+}
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.22);
+  transition: transform 0.22s;
+}
+.toggle-switch.active {
+  background: var(--yellow, #FEA503);
+}
+.toggle-switch.active::after {
+  transform: translateX(18px);
+}
 
 /* Transfer sheet */
 .transfer-accounts-row { display: flex; align-items: flex-end; gap: 10px; padding: 0 var(--space-md) var(--space-sm); }
@@ -114,6 +150,6 @@
 }
 .transfer-account-select:focus { border-color: var(--blue); }
 .transfer-arrow { color: var(--label-tertiary); padding-bottom: 12px; flex-shrink: 0; }
-.transfer-preview { display: flex; align-items: center; gap: 8px; margin: 0 var(--space-md) var(--space-md); padding: 12px 16px; background: #111214; border-radius: var(--radius-xl); color: #fff; font-size: 13px; font-weight: 700; animation: 0.2s fadeSlideUp both; }
+.transfer-preview { display: flex; align-items: center; gap: 8px; margin: 0 var(--space-md) var(--space-md); padding: 12px 16px; background: var(--color-dark); border-radius: var(--radius-xl); color: #fff; font-size: 13px; font-weight: 700; animation: 0.2s fadeSlideUp both; }
 .transfer-preview-from, .transfer-preview-to { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .transfer-preview-amount { flex-shrink: 0; font-size: 14px; font-weight: 900; opacity: 0.85; }

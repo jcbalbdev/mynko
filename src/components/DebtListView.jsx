@@ -4,11 +4,14 @@
  * Pill is tappable to toggle paid status in real-time.
  */
 import React, { useMemo } from 'react';
+import { Handshake } from 'lucide-react';
 import './DebtListView.css';
 import { resolveCategory }  from '../utils/categories';
-import { formatAmount, applyFilters, applySearchTags } from '../utils/expenses';
+import { applyFilters, applySearchTags } from '../utils/expenses';
+import { formatAmount } from '../utils/formatters';
 import { getCurrencyByCode } from '../utils/currencies';
 import { useUserCategoriesCtx } from '../context/UserCategoriesContext';
+import EmptyState from './ui/EmptyState';
 
 function DebtRow({ expense, onTogglePaid, onPress }) {
   const userCategories = useUserCategoriesCtx();
@@ -34,7 +37,7 @@ function DebtRow({ expense, onTogglePaid, onPress }) {
           <span className="debt-row-debtor">{debtor}</span>
           <span className="debt-row-desc">{expense.description || cat.label}</span>
           <span className="debt-row-amount">
-            {formatAmount(owes)} {currency.code}
+            {formatAmount(owes)} {currency.symbol}
           </span>
         </div>
       </button>
@@ -67,13 +70,7 @@ export default function DebtListView({ expenses, onTogglePaid, onPress, period =
   const paid    = debts.filter(e =>  e.sharedPaid);
 
   if (debts.length === 0) {
-    return (
-      <div className="debt-empty">
-        <span className="debt-empty-icon">🤝</span>
-        <p className="debt-empty-title">Sin deudas</p>
-        <p className="debt-empty-sub">Los gastos compartidos aparecerán aquí.</p>
-      </div>
-    );
+    return <EmptyState Icon={Handshake} title="Sin deudas" description="Los gastos compartidos aparecerán aquí." />;
   }
 
   return (

@@ -38,6 +38,6 @@
 /* Date field button */
 .date-field-btn { width: calc(100% - var(--space-xl)); margin: 0 auto var(--space-sm); background: var(--fill-tertiary); border-radius: var(--radius-xl); font-family: var(--font); color: var(--label-primary); cursor: pointer; text-align: left; border: none; align-items: center; gap: 10px; padding: 14px 16px; font-size: 14px; font-weight: 700; transition: background 0.15s; display: flex; }
 .date-field-btn:active { background: var(--bg-tertiary); }
-.date-field-icon { color: var(--blue); flex-shrink: 0; }
+.date-field-icon { color: var(--color-dark); flex-shrink: 0; }
 .date-field-label { color: var(--label-primary); flex: 1; font-weight: 700; }
 .date-field-chevron { color: var(--label-tertiary); font-size: 10px; }

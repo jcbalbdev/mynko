@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
+import { useCallback } from 'react';
+import { useSupabaseSettings } from './useSupabaseSettings';
 
 const DEFAULTS = {
   weekly_summary:               true,
@@ -19,35 +19,13 @@ const DEFAULTS = {
 };
 
 export function useNotificationSettings(userId) {
-  const [settings, setSettings] = useState(DEFAULTS);
-  const [loading,  setLoading]  = useState(true);
-
-  const fetch = useCallback(async () => {
-    if (!userId) return;
-    const { data } = await supabase
-      .from('notification_settings')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    if (data) {
-      setSettings({ ...DEFAULTS, ...data });
-    } else {
-      // First time — insert defaults
-      await supabase.from('notification_settings').insert({ user_id: userId, ...DEFAULTS });
-    }
-    setLoading(false);
-  }, [userId]);
-
-  useEffect(() => { fetch(); }, [fetch]);
+  const { settings, loading, update } = useSupabaseSettings({
+    userId, table: 'notification_settings', defaults: DEFAULTS,
+  });
 
   const toggle = useCallback(async (key) => {
-    const next = !settings[key];
-    setSettings(prev => ({ ...prev, [key]: next }));
-    await supabase
-      .from('notification_settings')
-      .upsert({ user_id: userId, [key]: next }, { onConflict: 'user_id' });
-  }, [settings, userId]);
+    await update({ [key]: !settings[key] });
+  }, [settings, update]);
 
   return { settings, loading, toggle };
 }

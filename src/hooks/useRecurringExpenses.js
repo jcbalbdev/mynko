@@ -6,6 +6,7 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { toDateString } from '../utils/dates';
 
 /* ── Compute the next due date after `after` (defaults to today) ── */
 export function computeNextDueDate(rec, after = new Date()) {
@@ -99,7 +100,7 @@ function recurringToRow(data, userId) {
     day_of_month: data.dayOfMonth  ?? null,
     yearly_day:   data.yearlyDay   ?? null,
     yearly_month: data.yearlyMonth ?? null,
-    next_due_date: nextDue ? nextDue.toISOString().split('T')[0] : null,
+    next_due_date: toDateString(nextDue),
     updated_at:   new Date().toISOString(),
   };
 }
@@ -192,8 +193,36 @@ export function useRecurringExpenses(userId) {
       yearly_day:   rec.yearlyDay,
       yearly_month: rec.yearlyMonth,
     });
-    const nextDueStr   = nextDue ? nextDue.toISOString().split('T')[0] : null;
+    const nextDueStr   = toDateString(nextDue);
     const triggeredAt  = new Date().toISOString();
+
+    setRecurring(prev => prev.map(r =>
+      r.id === id ? { ...r, nextDueDate: nextDueStr, lastTriggeredAt: triggeredAt } : r
+    ));
+    await supabase.from('recurring_expenses').update({
+      next_due_date:     nextDueStr,
+      last_triggered_at: triggeredAt,
+      updated_at:        triggeredAt,
+    }).eq('id', id);
+  };
+
+  /**
+   * markRecurringDone — user taps "Ya lo registré".
+   * Advances next_due_date without creating a new expense.
+   */
+  const markRecurringDone = async (id) => {
+    const rec = recurring.find(r => r.id === id);
+    if (!rec) return;
+
+    const nextDue = computeNextDueDate({
+      frequency:    rec.frequency,
+      days_of_week: rec.daysOfWeek,
+      day_of_month: rec.dayOfMonth,
+      yearly_day:   rec.yearlyDay,
+      yearly_month: rec.yearlyMonth,
+    });
+    const nextDueStr  = toDateString(nextDue);
+    const triggeredAt = new Date().toISOString();
 
     setRecurring(prev => prev.map(r =>
       r.id === id ? { ...r, nextDueDate: nextDueStr, lastTriggeredAt: triggeredAt } : r
@@ -242,7 +271,7 @@ export function useRecurringExpenses(userId) {
           yearly_day:   rec.yearlyDay,
           yearly_month: rec.yearlyMonth,
         }, new Date(rec.nextDueDate));
-        const nextDueStr  = nextDue ? nextDue.toISOString().split('T')[0] : null;
+        const nextDueStr  = toDateString(nextDue);
         const triggeredAt = new Date().toISOString();
 
         setRecurring(prev => prev.map(r =>
@@ -265,6 +294,7 @@ export function useRecurringExpenses(userId) {
     updateRecurring,
     deleteRecurring,
     confirmRecurring,
+    markRecurringDone,
     autoRegisterSubscriptions,
     refetch: fetchRecurring,
   };

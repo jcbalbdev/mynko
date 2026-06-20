@@ -8,17 +8,22 @@
  */
 import React, { createContext, useContext } from 'react';
 
-const UserCategoriesContext = createContext([]);
+const UserCategoriesContext = createContext({ userCategories: [], activeCategories: null });
 
-export function UserCategoriesProvider({ userCategories, children }) {
+export function UserCategoriesProvider({ userCategories, activeCategories = null, children }) {
   return (
-    <UserCategoriesContext.Provider value={userCategories}>
+    <UserCategoriesContext.Provider value={{ userCategories, activeCategories }}>
       {children}
     </UserCategoriesContext.Provider>
   );
 }
 
-/** Hook to consume userCategories from context */
 export function useUserCategoriesCtx() {
-  return useContext(UserCategoriesContext);
+  const { userCategories } = useContext(UserCategoriesContext);
+  return userCategories;
+}
+
+export function useActiveCategoriesCtx() {
+  const { activeCategories } = useContext(UserCategoriesContext);
+  return activeCategories;
 }

@@ -25,7 +25,7 @@
   transition: background 0.2s, color 0.2s, transform 0.12s;
 }
 .debt-pill:active { transform: scale(0.94); }
-.debt-pill.paid { color: #1a7a34; background: rgba(52,199,89,.15); }
+.debt-pill.paid { color: var(--color-success); background: rgba(52,199,89,.15); }
 .debt-empty { text-align: center; flex-direction: column; justify-content: center; align-items: center; gap: 8px; padding: 60px 24px; display: flex; }
 .debt-empty-icon { font-size: 44px; }
 .debt-empty-title { color: var(--label-primary); font-size: 17px; font-weight: 800; }
@@ -95,7 +95,7 @@
   cursor: pointer;
   width: calc(100% - 2 * var(--space-md));
   margin: 12px var(--space-md) 0;
-  background: #111214;
+  background: var(--color-dark);
   border: none;
   justify-content: center;
   align-items: center;

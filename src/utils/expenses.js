@@ -4,39 +4,9 @@
  * No React, no UI — safe to use anywhere.
  */
 import { getCategoryById } from './categories';
+import { friendlyDate } from './formatters';
 
-/** Format a number as a clean currency string (no symbol) */
-export function formatAmount(amount) {
-  if (amount == null || isNaN(amount)) return '0';
-  return amount % 1 === 0
-    ? amount.toLocaleString('es-MX')
-    : amount.toFixed(2);
-}
-
-/** Human-readable date label: "hoy", "ayer", or a locale string */
-export function friendlyDate(isoString) {
-  const d   = new Date(isoString);
-  const now = new Date();
-  const today     = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-  const day = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-
-  if (day.getTime() === today.getTime())     return 'Hoy';
-  if (day.getTime() === yesterday.getTime()) return 'Ayer';
-  return d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
-}
-
-/** Pretty date label shown inside AddExpenseSheet */
-export function expenseDateLabel(date) {
-  const now     = new Date();
-  const isToday = date.getDate()     === now.getDate()     &&
-                  date.getMonth()    === now.getMonth()    &&
-                  date.getFullYear() === now.getFullYear();
-  return isToday
-    ? `Hoy, ${date.toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })}`
-    : date.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-}
+export { formatAmount, friendlyDate, expenseDateLabel } from './formatters';
 
 /** Filter expenses by period, type, and optionally currency */
 export function applyFilters(expenses, period, typeFilter, currencyFilter = 'all', locationFilter = 'Todos') {
@@ -48,6 +18,8 @@ export function applyFilters(expenses, period, typeFilter, currencyFilter = 'all
     if (period && typeof period === 'object') {
       if (period.type === 'month') {
         okPeriod = d.getMonth() === period.month && d.getFullYear() === period.year;
+      } else if (period.type === 'year') {
+        okPeriod = d.getFullYear() === period.year;
       } else if (period.type === 'custom') {
         const from = new Date(period.from); from.setHours(0, 0, 0, 0);
         const to   = new Date(period.to);   to.setHours(23, 59, 59, 999);
@@ -85,13 +57,15 @@ export function groupByCategory(expenses, userCategories = []) {
     // Resolve the "bucket" category ID — subcategories roll up to their parent
     let bucketId = e.category;
     const sub = userCategories.find(s => s.id === e.category);
-    if (sub) bucketId = sub.parent_id;
+    if (sub) bucketId = sub.parent_id ?? sub.id;
 
-    // Get the authoritative label, color and bg from the parent category definition
-    const catDef   = getCategoryById(bucketId);
-    const catColor = catDef?.color ?? '#8e8e93';
-    const catBg    = catDef?.bg    ?? '#E0E0E0';
-    const catLabel = catDef?.label ?? bucketId;  // never show raw UUID
+    // Get label/color — user override takes precedence over static definition
+    const catDef     = getCategoryById(bucketId);
+    const override   = userCategories.find(c => c.parent_id === '__override__' && c.name === bucketId);
+    const customCat  = !catDef ? userCategories.find(c => c.id === bucketId) : null;
+    const catColor   = override?.color ?? catDef?.color ?? customCat?.color ?? '#8e8e93';
+    const catBg      = override?.color ?? catDef?.bg    ?? customCat?.color ?? '#E0E0E0';
+    const catLabel   = catDef?.label ?? customCat?.name  ?? bucketId;
 
     if (!map[bucketId]) {
       map[bucketId] = {
@@ -135,19 +109,23 @@ export function groupBySubcategory(expenses, userCategories = []) {
   const map = {};
 
   expenses.forEach(e => {
-    const key      = e.category;
-    const sub      = userCategories.find(s => s.id === key);
-    const parentId = sub ? sub.parent_id : key;
-    const catDef   = getCategoryById(parentId);
-    const label    = sub ? sub.name : (catDef?.label ?? key);
+    const key        = e.category;
+    const sub        = userCategories.find(s => s.id === key);
+    const parentId   = sub ? (sub.parent_id ?? sub.id) : key;
+    const catDef     = getCategoryById(parentId);
+    const override   = userCategories.find(c => c.parent_id === '__override__' && c.name === parentId);
+    const customCat  = !catDef ? userCategories.find(c => c.id === parentId) : null;
+    const label      = sub ? sub.name : (catDef?.label ?? customCat?.name ?? key);
+    const color      = override?.color ?? catDef?.color ?? customCat?.color ?? '#8e8e93';
+    const bg         = override?.color ?? catDef?.bg    ?? customCat?.color ?? '#E0E0E0';
 
     if (!map[key]) {
       map[key] = {
         id:         key,
         category:   key,
         amount:     0,
-        color:      catDef?.color ?? '#8e8e93',
-        bg:         catDef?.bg    ?? '#E0E0E0',
+        color,
+        bg,
         label,
         currency:   e.currency ?? 'MXN',
         latestDate: e.date,

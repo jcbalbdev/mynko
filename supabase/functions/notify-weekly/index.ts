@@ -23,21 +23,35 @@ async function push(at: string, token: string, title: string, body: string) {
   await fetch(`https://fcm.googleapis.com/v1/projects/${pid}/messages:send`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: { token, notification: { title, body } } }),
+    body: JSON.stringify({ message: { token, notification: { title, body }, android: { notification: { icon: 'ic_launcher_cat' } } } }),
   })
 }
 
 function fmt(n: number) { return n.toLocaleString('es-MX', { maximumFractionDigits: 0 }) }
+
+const BUILT_IN_LABELS: Record<string, string> = {
+  food: 'Restaurantes', services: 'Servicios', entertainment: 'Entretenimiento',
+  family: 'Familia', education: 'Educación', work: 'Trabajo', technology: 'Tecnología',
+  transport: 'Transporte', savings: 'Finanzas', home: 'Hogar', donations: 'Mascotas',
+  travel: 'Viajes', health: 'Salud', unexpected: 'Imprevistos', shopping: 'Compras',
+  clothing: 'Vestimenta', exchange: 'Cambio', credit_payment: 'Pago de Tarjeta',
+  initial_balance: 'Saldo inicial',
+}
+
+function resolveCategoryLabel(id: string, userCats: any[]): string {
+  if (BUILT_IN_LABELS[id]) return BUILT_IN_LABELS[id]
+  return userCats.find((c: any) => c.id === id)?.name ?? id
+}
 
 serve(async () => {
   const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 
   // Runs Monday — compare last week (Mon-Sun) vs week before
   const now = new Date()
-  const lastWeekEnd   = new Date(now); lastWeekEnd.setDate(now.getDate() - 1); lastWeekEnd.setHours(23, 59, 59, 999)
-  const lastWeekStart = new Date(now); lastWeekStart.setDate(now.getDate() - 7); lastWeekStart.setHours(0, 0, 0, 0)
-  const prevWeekEnd   = new Date(lastWeekStart); prevWeekEnd.setMilliseconds(-1)
-  const prevWeekStart = new Date(lastWeekStart); prevWeekStart.setDate(lastWeekStart.getDate() - 7)
+  const lastWeekEnd   = new Date(now); lastWeekEnd.setUTCDate(now.getUTCDate() - 1); lastWeekEnd.setUTCHours(23, 59, 59, 999)
+  const lastWeekStart = new Date(now); lastWeekStart.setUTCDate(now.getUTCDate() - 7); lastWeekStart.setUTCHours(0, 0, 0, 0)
+  const prevWeekEnd   = new Date(lastWeekStart); prevWeekEnd.setUTCMilliseconds(-1)
+  const prevWeekStart = new Date(lastWeekStart); prevWeekStart.setUTCDate(lastWeekStart.getUTCDate() - 7)
 
   // Users with any weekly notification enabled
   const { data: settings } = await sb
@@ -84,7 +98,10 @@ serve(async () => {
     for (const e of lastWeekExp ?? []) {
       categoryTotals[e.category] = (categoryTotals[e.category] ?? 0) + Number(e.amount)
     }
-    const topCategory = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0]?.[0] ?? ''
+    const topCategoryId = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0]?.[0] ?? ''
+
+    const { data: userCats } = await sb.from('user_categories').select('id, name').eq('user_id', setting.user_id)
+    const topCategory = topCategoryId ? resolveCategoryLabel(topCategoryId, userCats ?? []) : ''
 
     for (const { token } of userTokens) {
       // Weekly compare
@@ -99,9 +116,14 @@ serve(async () => {
 
       // Weekly summary
       if (setting.weekly_summary && lastWeekTotal > 0) {
+        const topCategoryAmount = topCategoryId ? categoryTotals[topCategoryId] : 0
+        let context = ''
+        if (prevWeekTotal > 0) {
+          context = lastWeekTotal < prevWeekTotal ? ' Mejor que la semana pasada 💪' : ' Semana más intensa que la anterior.'
+        }
         const summaryBody = topCategory
-          ? `Gastaste $${fmt(lastWeekTotal)} · Mayor categoría: ${topCategory}. ¿Cómo va el mes?`
-          : `Gastaste $${fmt(lastWeekTotal)} esta semana. ¿Cómo va el mes?`
+          ? `Gastaste S/ ${fmt(lastWeekTotal)} esta semana · ${topCategory} se llevó S/ ${fmt(topCategoryAmount)}.${context}`
+          : `Gastaste S/ ${fmt(lastWeekTotal)} esta semana.${context}`
         try { await push(at, token, '📊 Tu semana en números', summaryBody) } catch (_) {}
       }
     }

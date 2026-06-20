@@ -15,6 +15,8 @@ export function useHomeSheets() {
   const [showExchangeSheet,     setShowExchangeSheet]     = useState(false);
   const [showAddAccSheet,       setShowAddAccSheet]       = useState(false);
   const [showTransferSheet,     setShowTransferSheet]     = useState(false);
+  const [transferFromAccountId, setTransferFromAccountId] = useState(null);
+  const [txSheetAccount,        setTxSheetAccount]        = useState(null);
   const [showCreditChargeSheet, setShowCreditChargeSheet] = useState(false);
   const [showCreditPaySheet,    setShowCreditPaySheet]    = useState(false);
   const [creditSheetAccountId,  setCreditSheetAccountId]  = useState(null);
@@ -33,6 +35,8 @@ export function useHomeSheets() {
       showExchangeSheet,
       showAddAccSheet,
       showTransferSheet,
+      transferFromAccountId,
+      txSheetAccount,
       showCreditChargeSheet,
       showCreditPaySheet,
       creditSheetAccountId,
@@ -60,8 +64,14 @@ export function useHomeSheets() {
       openAddAccSheet:   () => setShowAddAccSheet(true),
       closeAddAccSheet:  () => setShowAddAccSheet(false),
 
-      openTransferSheet: () => setShowTransferSheet(true),
-      closeTransferSheet:() => setShowTransferSheet(false),
+      openTransferSheet: (account = null) => {
+        setTransferFromAccountId(account?.id ?? null);
+        setShowTransferSheet(true);
+      },
+      closeTransferSheet: () => {
+        setShowTransferSheet(false);
+        setTransferFromAccountId(null);
+      },
 
       openCreditChargeSheet: (accountId = null) => {
         setCreditSheetAccountId(accountId);
@@ -80,6 +90,9 @@ export function useHomeSheets() {
         setShowCreditPaySheet(false);
         setCreditSheetAccountId(null);
       },
+
+      openTxSheet:       (acc) => setTxSheetAccount(acc),
+      closeTxSheet:      ()    => setTxSheetAccount(null),
 
       selectAccount:     (acc) => setSelectedAccount(acc),
       clearAccount:      ()    => setSelectedAccount(null),

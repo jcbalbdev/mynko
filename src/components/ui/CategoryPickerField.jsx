@@ -7,7 +7,7 @@ import FormSection            from './FormSection';
 import CategoryPickerSheet    from './CategoryPickerSheet';
 import CreateSubcategorySheet from '../CreateSubcategorySheet';
 import { useUserCategoriesCtx } from '../../context/UserCategoriesContext';
-import { CATEGORIES } from '../../utils/categories';
+import { resolveCategory } from '../../utils/categories';
 import './CategoryPicker.css';
 
 export default function CategoryPickerField({
@@ -24,22 +24,10 @@ export default function CategoryPickerField({
   const userCategories = useUserCategoriesCtx();
   const [open, setOpen] = useState(false);
 
-  // Find selected category label and color for the trigger button
   const selectedInfo = useMemo(() => {
     if (!selected) return null;
-    
-    // Check standard categories
-    const std = CATEGORIES.find(c => c.id === selected);
-    if (std) return { label: std.label, color: std.color };
-    
-    // Check user categories
-    const custom = userCategories.find(c => c.id === selected);
-    if (custom) {
-      const parent = CATEGORIES.find(p => p.id === custom.parent_id);
-      return { label: custom.name, color: custom.color ?? parent?.color ?? '#8e8e93' };
-    }
-    
-    return null;
+    const resolved = resolveCategory(selected, userCategories);
+    return { label: resolved.label, color: resolved.color };
   }, [selected, userCategories]);
 
   return (

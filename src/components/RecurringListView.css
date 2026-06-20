@@ -9,6 +9,27 @@
   position: relative;
 }
 
+/* ── Hero ── */
+.rec-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px var(--space-md) 8px;
+  gap: 2px;
+}
+.rec-hero-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--label-tertiary);
+}
+.rec-hero-count {
+  font-size: clamp(60px, 22vw, 108px);
+  font-weight: 700;
+  color: #0d0d12;
+  letter-spacing: -5px;
+  line-height: 1;
+}
+
 /* ── iOS Segmented Control ── */
 .rec-tabs {
   display: flex;
@@ -44,7 +65,7 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 0.5px 1px rgba(0,0,0,0.08);
 }
 .rec-tab-badge {
-  background: var(--blue);
+  background: var(--color-dark);
   color: #fff;
   border-radius: 99px;
   font-size: 10px;
@@ -52,9 +73,6 @@
   padding: 1px 6px;
   min-width: 18px;
   text-align: center;
-}
-.rec-tab.active .rec-tab-badge {
-  background: var(--blue);
 }
 
 /* ── List ── */
@@ -84,19 +102,15 @@
 
 /* ── Card ── */
 .rec-card {
-  background: #fff;
+  background: var(--bg-secondary);
   border-radius: var(--radius-xl);
-  padding: 14px;
+  padding: 14px 16px;
   margin-bottom: 10px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 10px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-  transition: box-shadow 0.15s;
-}
-.rec-card--urgent {
-  border-left: 3px solid #FF3B30;
+  cursor: pointer;
 }
 
 .rec-card-left {
@@ -157,7 +171,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 8px;
+  gap: 6px;
   flex-shrink: 0;
 }
 .rec-card-amount {
@@ -181,43 +195,47 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  background: #34C759;
+  background: var(--color-dark);
   color: #fff;
   border: none;
   border-radius: var(--radius-full);
   font-family: var(--font);
   font-size: 12px;
   font-weight: 700;
-  padding: 6px 12px;
+  padding: 7px 13px;
   cursor: pointer;
   transition: transform 0.15s, opacity 0.15s;
+  flex-shrink: 0;
 }
 .rec-confirm-btn:active { transform: scale(0.93); opacity: 0.85; }
-
-/* Delete button */
-.rec-delete-btn {
+.rec-confirm-btn--done { background: #1e3a1e; color: #4caf50; cursor: default; }
+.rec-confirm-btn--done:active { transform: none; opacity: 1; }
+.rec-skip-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: none;
-  background: var(--fill-tertiary);
+  background: transparent;
   color: var(--label-tertiary);
+  border: 1px solid var(--separator, rgba(255,255,255,0.12));
+  border-radius: var(--radius-full);
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 10px;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
 }
-.rec-delete-btn:active { background: #FFE5E5; color: #FF3B30; }
+.rec-skip-btn:active { opacity: 0.6; }
 
 /* Auto badge (suscripciones) */
 .rec-auto-badge {
-  background: var(--blue);
+  background: var(--color-dark);
   color: #fff;
   border-radius: var(--radius-full);
   font-size: 10px;
   font-weight: 700;
-  padding: 3px 9px;
+  padding: 4px 10px;
+  flex-shrink: 0;
 }
 
 /* ── Day / schedule pickers (used in AddRecurring/AddSubscription sheets) ── */

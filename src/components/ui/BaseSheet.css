@@ -80,17 +80,29 @@
 .sheet-trash-btn {
   width: 32px;
   height: 32px;
-  color: var(--red);
+  color: #ff3b30;
   cursor: pointer;
-  background: rgba(255,59,48,.12);
+  background: transparent;
   border: none;
   border-radius: 50%;
   justify-content: center;
   align-items: center;
-  transition: transform 0.15s cubic-bezier(.34,1.56,.64,1), background 0.15s;
+  transition: transform 0.15s cubic-bezier(.34,1.56,.64,1), opacity 0.15s;
   display: flex;
 }
-.sheet-trash-btn:active { background: rgba(255,59,48,.22); transform: scale(0.88); }
+.sheet-trash-btn:active { opacity: 0.6; transform: scale(0.88); }
+
+/* Transaction edit hero */
+.txn-edit-hero { display: flex; flex-direction: column; align-items: center; padding: 8px var(--space-md) 20px; gap: 10px; }
+.txn-edit-amount-wrap { display: flex; align-items: baseline; gap: 4px; }
+.txn-edit-amount-input { background: transparent; border: none; outline: none; font-family: var(--font); font-size: 44px; font-weight: 900; letter-spacing: -1.5px; color: var(--label-primary); caret-color: var(--color-dark); text-align: left; min-width: 44px; }
+.txn-edit-amount-input::placeholder { color: var(--label-quaternary); }
+.txn-edit-currency { font-size: 18px; font-weight: 700; color: var(--label-tertiary); }
+.txn-edit-cat-pills { display: flex; align-items: center; gap: 6px; }
+.txn-edit-cat-pill { font-size: 11px; font-weight: 800; color: #fff; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.4px; }
+
+/* Transaction type pill */
+.txn-type-pill { font-size: 11px; font-weight: 800; color: #fff; background: var(--color-dark); padding: 3px 9px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.4px; }
 
 /* Amount input inside sheet */
 .amount-input-wrap {
@@ -104,9 +116,9 @@
 .amount-input {
   font-family: var(--font);
   color: var(--label-primary);
-  text-align: right;
+  text-align: left;
   letter-spacing: -2px;
-  width: 180px;
+  min-width: 40px;
   caret-color: var(--blue);
   background: transparent;
   border: none;
@@ -191,9 +203,9 @@
 .shared-paid-label { color: var(--label-primary); font-size: 14px; font-weight: 700; }
 .shared-paid-amount { color: var(--label-tertiary); font-size: 12px; font-weight: 600; }
 .shared-paid-toggle { border-radius: var(--radius-full); cursor: pointer; font-family: var(--font); color: var(--label-secondary); background: rgba(120,120,128,.16); border: none; align-items: center; gap: 6px; padding: 5px 12px 5px 6px; font-size: 13px; font-weight: 700; transition: background 0.2s; display: flex; }
-.shared-paid-toggle.is-paid { color: #1a7a34; background: rgba(52,199,89,.18); }
+.shared-paid-toggle.is-paid { color: var(--color-success); background: rgba(52,199,89,.18); }
 .toggle-knob { width: 24px; height: 24px; color: var(--label-secondary); background: #fff; border-radius: 50%; justify-content: center; align-items: center; transition: color 0.2s; display: flex; box-shadow: 0 1px 4px rgba(0,0,0,.18); }
-.shared-paid-toggle.is-paid .toggle-knob { color: #1a7a34; }
+.shared-paid-toggle.is-paid .toggle-knob { color: var(--color-success); }
 
 /* ── Edit info cards (fecha / tipo / cuenta / categoría) ── */
 .edit-info-card {
@@ -226,6 +238,19 @@
   align-items: center;
   gap: 6px;
 }
+.edit-inline-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--label-primary);
+  text-align: right;
+  flex: 1;
+  min-width: 0;
+}
+.edit-inline-input::placeholder { color: var(--label-quaternary); font-weight: 500; }
 .edit-acc-type-badge {
   font-size: 10px;
   font-weight: 800;
@@ -280,4 +305,4 @@
 .type-toggle { background: var(--fill-tertiary); border-radius: var(--radius-xl); margin: 0 var(--space-md) var(--space-md); gap: 0; padding: 3px; display: flex; }
 .type-btn { border-radius: calc(var(--radius-xl) - 3px); font-family: var(--font); color: var(--label-secondary); cursor: pointer; text-align: center; white-space: nowrap; background: transparent; border: none; flex: 1; padding: 9px 8px; font-size: 13px; font-weight: 700; transition: background 0.18s, color 0.18s, box-shadow 0.18s; }
 .type-btn:active { opacity: 0.7; }
-.type-btn.active { color: var(--label-primary); background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,.12), 0 0.5px 2px rgba(0,0,0,.08); }
+.type-btn.active { color: #fff; background: var(--color-dark); box-shadow: 0 1px 6px rgba(0,0,0,.12), 0 0.5px 2px rgba(0,0,0,.08); }

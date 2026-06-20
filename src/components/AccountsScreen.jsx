@@ -49,7 +49,7 @@ function AccountCard({ account, expenses, onClick }) {
         <span className={`account-card-balance${isNegative ? ' negative' : ''}`}>
           {cur.symbol} {realBalance.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </span>
-        <span className="account-card-currency">{cur.code}</span>
+        <span className="account-card-currency">{cur.symbol}</span>
       </div>
     </button>
   );

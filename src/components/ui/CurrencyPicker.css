@@ -22,7 +22,7 @@
 .currency-modal-list { -webkit-overflow-scrolling: touch; flex-direction: column; flex: 1; gap: 4px; padding: 0 16px; display: flex; overflow-y: auto; }
 .currency-modal-item { border: 1.5px solid var(--separator); border-radius: var(--radius-xl); cursor: pointer; font-family: var(--font); text-align: left; background: #fff; align-items: center; gap: 10px; padding: 11px 14px; transition: border-color 0.12s, background 0.12s, transform 0.1s; display: flex; }
 .currency-modal-item:active { transform: scale(0.98); }
-.currency-modal-item.active { background: #111214; border-color: #111214; }
+.currency-modal-item.active { background: var(--color-dark); border-color: var(--color-dark); }
 .currency-flag { flex-shrink: 0; font-size: 22px; line-height: 1; }
 .currency-chip-text { flex-direction: column; flex: 1; min-width: 0; display: flex; }
 .currency-code { color: var(--label-primary); font-size: 14px; font-weight: 800; line-height: 1.2; }

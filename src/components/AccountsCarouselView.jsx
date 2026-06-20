@@ -1,15 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './AccountsCarouselView.css';
-import { ArrowLeftRight } from 'lucide-react';
-import { Plus } from 'lucide-react';
+import { ArrowLeftRight, Plus } from 'lucide-react';
 import { getCurrencyByCode } from '../utils/currencies';
 import { getAccountTypeLabel, computeAccountBalance } from '../utils/accounts';
 
 /* Solid colors per account type */
 const T = {
-  efectivo: { color: '#34c759', label: 'Efectivo' },  /* --green  */
-  banco:    { color: '#007aff', label: 'Banco'    },  /* --blue   */
-  ahorro:   { color: '#ff9500', label: 'Ahorro'   },  /* --orange */
+  efectivo: { color: '#2C2C2E', label: 'Efectivo' },
+  banco:    { color: '#2C2C2E', label: 'Banco'    },
+  ahorro:   { color: '#2C2C2E', label: 'Ahorro'   },
 };
 
 const SLOT_X   = 48;   /* peek = 48 - 318×0.1 = 16px uniform */
@@ -17,7 +16,7 @@ const FRICTION = 0.93;   /* más inercia → desliza más lejos antes de frenar 
 const SPRING   = 0.10;   /* más lento al encajar → suave como Instagram      */
 const ELASTIC  = 0.10;
 
-export default function AccountsCarouselView({ accounts=[], expenses=[], onOpenAddAccount, onCardPress, onTransfer, onActiveChange }) {
+export default function AccountsCarouselView({ accounts=[], expenses=[], onOpenAddAccount, onCardPress, onInfo, onTransfer, onActiveChange }) {
   const items = [...accounts, { id:'__add__' }];
   const n     = items.length;
 
@@ -119,7 +118,7 @@ export default function AccountsCarouselView({ accounts=[], expenses=[], onOpenA
         if (dist >= 4) return null;
 
         const isActive = idx === activeIdx;
-        const cfg      = T[item.type] ?? { g: 'linear-gradient(155deg,#333,#666)', label: '' };
+        const cfg      = T[item.type] ?? { color: '#2C2C2E', label: '' };
         const scale    = Math.max(0.4, 1 - dist * 0.2);
         const zIdx     = 10 - dist * 2;
         const opacity  = [1.0, 0.88, 0.70, 0.50][dist];
@@ -160,13 +159,19 @@ export default function AccountsCarouselView({ accounts=[], expenses=[], onOpenA
           <div key={item.id} style={wrapStyle} className="acw-card-wrap" onClick={handleClick}>
             <div className="acw-portrait-card" style={{ background: cfg.color }}>
 
-              {/* TOP ROW — only transfer icon (no balance text on card) */}
+              {/* TOP ROW — transfer icon left, info icon right */}
               <div className="acw-portrait-top">
                 <div
                   className="acw-portrait-icon-wrap"
                   onClick={e => { e.stopPropagation(); onTransfer?.(item); }}
                 >
                   <ArrowLeftRight size={16} strokeWidth={2} color="rgba(255,255,255,0.9)"/>
+                </div>
+                <div
+                  className="acw-portrait-icon-wrap"
+                  onClick={e => { e.stopPropagation(); onInfo?.(item); }}
+                >
+                  <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 15, fontStyle: 'italic', fontWeight: 700, lineHeight: 1, userSelect: 'none' }}>i</span>
                 </div>
               </div>
 

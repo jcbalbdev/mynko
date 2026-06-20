@@ -4,6 +4,11 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vite.dev/config/
 export default defineConfig({
+  build: {
+    // Older Android WebViews don't support modern CSS (e.g. dvh units).
+    // This keeps vh fallbacks and compiles modern syntax for those devices.
+    cssTarget: 'chrome61',
+  },
   plugins: [
     react(),
     VitePWA({

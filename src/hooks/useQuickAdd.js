@@ -35,10 +35,16 @@ export function useQuickAdd() {
   }, []);
 
   const handleLongPressRelease = useCallback((optId) => {
-    const view = quickAddRef.current?.view;
+    const qa   = quickAddRef.current;
+    const view = qa?.view;
     setQuickAdd(null);
     setHoveredOptionId(null);
-    if (optId && view) setQuickAddSheet({ subcatId: optId, view });
+    if (!optId) return;
+    if (optId === '__budget__') {
+      setQuickAddSheet({ type: 'budget', parentCatId: qa?.parentCatId });
+    } else if (view) {
+      setQuickAddSheet({ subcatId: optId, view });
+    }
   }, []);
 
   const clearQuickAdd = useCallback(() => {

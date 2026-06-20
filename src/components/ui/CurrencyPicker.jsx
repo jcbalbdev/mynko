@@ -33,13 +33,12 @@ export default function CurrencyPicker({ selected, onSelect }) {
     else       setSearch('');
   }, [open]);
 
-  const filtered = search.trim()
-    ? CURRENCIES.filter(c =>
-        c.code.toLowerCase().includes(search.toLowerCase()) ||
-        c.name.toLowerCase().includes(search.toLowerCase()) ||
-        c.country.toLowerCase().includes(search.toLowerCase())
-      )
-    : CURRENCIES;
+  const filtered = (() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return CURRENCIES;
+    const wordMatch = (str) => str.toLowerCase().split(' ').some(w => w.startsWith(q));
+    return CURRENCIES.filter(c => wordMatch(c.name) || wordMatch(c.country));
+  })();
 
   const handleSelect = (code) => {
     onSelect(code);
@@ -59,7 +58,7 @@ export default function CurrencyPicker({ selected, onSelect }) {
       >
         <FlagImg countryCode={cur.countryCode} size={28} />
         <div className="currency-trigger-text">
-          <span className="currency-trigger-code">{cur.code}</span>
+          <span className="currency-trigger-code">{cur.symbol}</span>
           <span className="currency-trigger-name">{cur.name}</span>
         </div>
         <span className="currency-trigger-chevron">▼</span>

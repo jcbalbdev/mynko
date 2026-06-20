@@ -9,25 +9,24 @@ import { Check, Banknote, Building2, PiggyBank } from 'lucide-react';
 import './AccountPicker.css';
 
 const TYPE_META = {
-  efectivo: { Icon: Banknote,  color: '#34c759' },
-  banco:    { Icon: Building2, color: '#007aff' },
-  ahorro:   { Icon: PiggyBank, color: '#ff9500' },
+  efectivo: { Icon: Banknote  },
+  banco:    { Icon: Building2 },
+  ahorro:   { Icon: PiggyBank },
 };
 
 function AccountIcon({ type, size = 20 }) {
-  const meta = TYPE_META[type] ?? { Icon: Wallet, color: '#8e8e93' };
-  const { Icon, color } = meta;
+  const { Icon } = TYPE_META[type] ?? { Icon: Banknote };
   return (
     <span
       style={{
         width: 36, height: 36,
-        borderRadius: 10,
-        background: color + '22',
+        borderRadius: '50%',
+        background: '#EEEEEE',
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         flexShrink: 0,
       }}
     >
-      <Icon size={size} color={color} strokeWidth={2} />
+      <Icon size={size} color="#111214" strokeWidth={2} />
     </span>
   );
 }
@@ -91,7 +90,7 @@ export default function AccountPicker({ accounts = [], value, onChange, open, on
                   >
                     <AccountIcon type={a.type} size={18} />
                     <span className="acpicker-row-name">{a.name}</span>
-                    {isActive && <Check size={18} color="#007aff" strokeWidth={2.5} className="acpicker-check" />}
+                    {isActive && <Check size={18} color="#111214" strokeWidth={2.5} className="acpicker-check" />}
                   </button>
                 );
               })}

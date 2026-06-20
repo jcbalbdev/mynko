@@ -1,0 +1,105 @@
+.menu-cfg-body {
+  padding: 0 var(--space-md) 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.menu-cfg-hint {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--label-tertiary);
+  line-height: 1.5;
+  margin: 0 4px;
+}
+
+.menu-cfg-list {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: 0 1px 6px rgba(0,0,0,.06);
+}
+
+.menu-cfg-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 14px 11px 4px;
+  transition: opacity 0.2s, background 0.15s;
+  background: var(--bg-secondary);
+}
+
+.menu-cfg-row.is-hidden {
+  opacity: 0.4;
+}
+
+.menu-cfg-row.dragging {
+  opacity: 0.95;
+  box-shadow: 0 4px 16px rgba(0,0,0,.12);
+  border-radius: var(--radius-lg);
+}
+
+.menu-cfg-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  cursor: grab;
+  color: var(--label-quaternary);
+  touch-action: none;
+  padding: 0;
+}
+
+.menu-cfg-handle:active {
+  cursor: grabbing;
+  color: var(--label-secondary);
+}
+
+.menu-cfg-icon {
+  flex-shrink: 0;
+  color: var(--label-secondary);
+}
+
+.menu-cfg-label {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--label-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-cfg-eye {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--label-secondary);
+  transition: background 0.15s;
+  padding: 0;
+}
+
+.menu-cfg-eye:active {
+  background: var(--fill-tertiary);
+}
+
+.menu-cfg-eye.is-hidden {
+  color: var(--label-quaternary);
+}
+
+.menu-cfg-divider {
+  height: 0.5px;
+  background: var(--separator);
+  margin: 0 14px;
+}

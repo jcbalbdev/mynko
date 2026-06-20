@@ -48,11 +48,11 @@
   white-space: nowrap;
   letter-spacing: -0.2px;
   font-size: 10px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
 }
 .bar-cat-pill {
-  color: #000;
+  color: #fff;
   white-space: nowrap;
   text-overflow: ellipsis;
   text-align: center;
@@ -62,7 +62,7 @@
   margin-top: 4px;
   padding: 5px 6px;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   transition: background 0.3s;
   overflow: hidden;
 }
@@ -90,6 +90,40 @@
   line-height: 1.5;
   margin-top: 20px;
 }
+/* ── Budget bars ── */
+.bar-fill--budget-track {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px 16px 0 0;
+  flex-shrink: 0;
+  width: 68px;
+  background: #EEEEEE;
+  animation: 0.55s cubic-bezier(.34,1.2,.64,1) both barGrow;
+}
+.bar-fill--budget-inner {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-radius: 16px 16px 0 0;
+  transition: height 0.4s cubic-bezier(.34,1.2,.64,1);
+  overflow: hidden;
+}
+.bar-fill--budget-spent-label {
+  position: absolute;
+  bottom: 5px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 800;
+  color: #fff;
+  white-space: nowrap;
+  line-height: 1;
+  pointer-events: none;
+  letter-spacing: -0.2px;
+}
+
 /* Ghost bar variants */
 .bar-col--ghost { cursor: default; pointer-events: none; }
 .bar-fill--ghost { width: 68px; border-radius: 16px 16px 0 0; border: 2.5px dashed rgba(0,0,0,.15); background: transparent !important; animation: none !important; }

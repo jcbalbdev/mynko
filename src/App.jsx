@@ -4,9 +4,11 @@
  * AuthenticatedApp is a separate component so useExpenses
  * is only called when there is a valid user (avoids hooks violations).
  */
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useAuth }                from './hooks/useAuth';
 import { usePushNotifications }   from './hooks/usePushNotifications';
+import { useBudgets }             from './hooks/useBudgets';
+import { useBudgetAlerts }        from './hooks/useBudgetAlerts';
 import { useYapeListener }        from './hooks/useYapeListener';
 import { useExpenses }            from './hooks/useExpenses';
 import { useUserSettings }        from './hooks/useUserSettings';
@@ -16,6 +18,8 @@ import { useTransfers }           from './hooks/useTransfers';
 import { useCreditCharges }       from './hooks/useCreditCharges';
 import { useRecurringExpenses }   from './hooks/useRecurringExpenses';
 import { useQuickAccess }         from './hooks/useQuickAccess';
+import { useWidgetAction }        from './hooks/useWidgetAction';
+import { syncAuthToWidget }       from './lib/widgetBridge';
 import { computeAccountBalance } from './utils/accounts';
 import { INITIAL_BALANCE_CATEGORY } from './utils/categories';
 import { UserCategoriesProvider } from './context/UserCategoriesContext';
@@ -27,6 +31,7 @@ import QuickAccessScreen    from './components/QuickAccessScreen';
 import AddExpenseSheet      from './components/AddExpenseSheet';
 import YapeExpenseSheet    from './components/YapeExpenseSheet';
 import LoginScreen          from './components/LoginScreen';
+import OnboardingScreen     from './components/OnboardingScreen';
 import Toast                from './components/ui/Toast';
 import LoadingScreen        from './components/ui/LoadingScreen';
 
@@ -50,7 +55,17 @@ function AuthenticatedApp({ user, signOut }) {
     updateSharedPaid,
     getMonthExpenses,
     getMonthTotal,
+    refetch: refetchExpenses,
   } = useExpenses(user.id);
+
+  // Re-fetch when app comes back to foreground (picks up widget-registered transactions)
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refetchExpenses();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [refetchExpenses]);
 
   const { settings, updateSetting } = useUserSettings(user.id);
   const defaultCurrency = settings.default_currency;
@@ -58,18 +73,31 @@ function AuthenticatedApp({ user, signOut }) {
   const {
     userCategories,
     createSubcategory,
+    createParentCategory,
     deleteSubcategory,
+    updateCategoryColor: updateCustomCategoryColor,
+    upsertSystemColorOverride,
   } = useUserCategories(user.id);
+
+  const activeCategories = useMemo(() => {
+    try {
+      const raw = settings?.active_categories;
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }, [settings?.active_categories]);
+
 
   const {
     accounts,
-    initDefaultAccounts,
+    loading: accountsLoading,
     createAccount,
     updateAccount,
     deleteAccount,
   } = useAccounts(user.id, defaultCurrency);
 
-  const { createTransfer } = useTransfers(user.id);
+  const { transfers, createTransfer } = useTransfers(user.id);
 
   const { charges, addCharge } = useCreditCharges(user.id);
 
@@ -78,6 +106,7 @@ function AuthenticatedApp({ user, signOut }) {
     addRecurring,
     updateRecurring,
     confirmRecurring,
+    markRecurringDone,
     deleteRecurring,
     autoRegisterSubscriptions,
   } = useRecurringExpenses(user.id);
@@ -91,16 +120,48 @@ function AuthenticatedApp({ user, signOut }) {
     uniqueDescriptions,
   } = useQuickAccess(user.id, expenses);
 
+  const { budgets, addBudget, updateBudget, deleteBudget } = useBudgets(user.id);
+  useBudgetAlerts({ expenses, budgets, userCategories });
+
   const [activeTab, setActiveTab] = useState('home');
+  const [homeNav,   setHomeNav]   = useState(null);
   const [showSheet, setShowSheet] = useState(false);
   const [toast,     setToast]     = useState(null);
 
-  /* Initialize default accounts when the user first logs in */
+  // Tracks which accounts have already triggered a balance alert this session
+  const alertedRef = useRef(new Set());
+
+  /* ── Min-balance alert check ── */
   useEffect(() => {
-    if (user?.id && defaultCurrency) {
-      initDefaultAccounts();
+    if (!accounts.length) return;
+
+    const pending = [];
+    for (const acc of accounts) {
+      if (!acc.minBalanceEnabled || acc.isCredit || acc.minBalanceThreshold == null) continue;
+      const balance   = computeAccountBalance(acc, expenses);
+      const threshold = acc.minBalanceThreshold;
+      const isAt      = balance <= threshold;
+      const isNear    = !isAt && balance <= threshold * 1.10;
+      if (!isAt && !isNear) continue;
+
+      const key = `${acc.id}:${isAt ? 'at' : 'near'}`;
+      if (!alertedRef.current.has(key)) {
+        alertedRef.current.add(key);
+        pending.push({ acc, balance, threshold, isAt });
+      }
     }
-  }, [user?.id, defaultCurrency, initDefaultAccounts]);
+
+    if (!pending.length) return;
+    // Show the most critical alert (lowest balance relative to threshold)
+    pending.sort((a, b) => (a.balance / a.threshold) - (b.balance / b.threshold));
+    const { acc, balance, threshold, isAt } = pending[0];
+    const sym = acc.currency;
+    const fmt = (n) => n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const msg = isAt
+      ? `¡Alerta! ${acc.name}: tu saldo es ${sym} ${fmt(balance)}, ha llegado al mínimo de ${sym} ${fmt(threshold)}`
+      : `${acc.name}: tu saldo es ${sym} ${fmt(balance)}, cerca del mínimo de ${sym} ${fmt(threshold)}`;
+    setToast({ message: msg, duration: 5000 });
+  }, [accounts, expenses]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* Auto-register overdue subscriptions on load */
   useEffect(() => {
@@ -130,6 +191,19 @@ function AuthenticatedApp({ user, signOut }) {
     }
   }, [getLastExpense, addExpense]);
 
+  /* ── Widget navigation (tap "+" or notification) ── */
+  const handleWidgetNavigate = useCallback((target) => {
+    if (target === 'quickaccess') {
+      setActiveTab('home');
+      setHomeNav('rapido');
+    } else if (target === 'home') {
+      setActiveTab('home');
+    }
+  }, []);
+
+  /* ── Widget action (tap from home screen widget) ── */
+  useWidgetAction(handleQuickRegister, handleWidgetNavigate);
+
   /* ── Recurring expense handlers ── */
   const handleAddRecurring = useCallback(async (data) => {
     try {
@@ -148,6 +222,14 @@ function AuthenticatedApp({ user, signOut }) {
       setToast(`Error: ${err.message}`);
     }
   }, [confirmRecurring, addExpense]);
+
+  const handleMarkRecurringDone = useCallback(async (id) => {
+    try {
+      await markRecurringDone(id);
+    } catch (err) {
+      setToast(`Error: ${err.message}`);
+    }
+  }, [markRecurringDone]);
 
   const handleUpdateRecurring = useCallback(async (id, fields) => {
     await updateRecurring(id, fields);
@@ -192,6 +274,55 @@ function AuthenticatedApp({ user, signOut }) {
     await updateCategoryColor(categoryId, color);
     setToast('Color actualizado');
   }, [updateCategoryColor]);
+
+  const handleUpdateSystemCategoryColor = useCallback(async (catId, color) => {
+    await upsertSystemColorOverride(catId, color);
+    await updateCategoryColor(catId, color);
+    const subcats = userCategories.filter(c => c.parent_id === catId);
+    await Promise.all(subcats.map(async sub => {
+      await updateCustomCategoryColor(sub.id, color);
+      await updateCategoryColor(sub.id, color);
+    }));
+    setToast('Color actualizado');
+  }, [upsertSystemColorOverride, updateCategoryColor, updateCustomCategoryColor, userCategories]);
+
+  /* ── Onboarding: create initial accounts + category preferences ── */
+  const handleOnboardingComplete = useCallback(async (accountsData, categoriesData) => {
+    for (const acc of accountsData) {
+      const balance = Number(acc.balance) || 0;
+      const newAccount = await createAccount({
+        name:       acc.name,
+        type:       acc.type,
+        currency:   acc.currency,
+        balance:    0,
+        hasBeenSet: balance > 0,
+      });
+      if (balance > 0) {
+        await addExpense({
+          type:        'ingreso',
+          category:    INITIAL_BALANCE_CATEGORY.id,
+          color:       INITIAL_BALANCE_CATEGORY.bg,
+          amount:      balance,
+          currency:    newAccount.currency,
+          accountId:   newAccount.id,
+          description: 'Saldo inicial',
+          date:        new Date().toISOString(),
+        });
+      }
+    }
+    if (categoriesData) {
+      const { selectedDefaults = [], customParents = [], systemOverrides = {} } = categoriesData;
+      const createdIds = [];
+      for (const { name, color } of customParents) {
+        const { data } = await createParentCategory(name, color);
+        if (data?.id) createdIds.push(data.id);
+      }
+      for (const [catId, color] of Object.entries(systemOverrides)) {
+        await upsertSystemColorOverride(catId, color);
+      }
+      await updateSetting('active_categories', JSON.stringify([...selectedDefaults, ...createdIds]));
+    }
+  }, [createAccount, addExpense, createParentCategory, updateSetting]);
 
   /* ── Account handlers ── */
   const handleAddAccount = useCallback(async (data) => {
@@ -279,8 +410,16 @@ function AuthenticatedApp({ user, signOut }) {
   /* Tabs that show the TabBar */
   const showTabBar = activeTab !== 'home';
 
+  if (accountsLoading) return <LoadingScreen />;
+  if (accounts.length === 0) return (
+    <OnboardingScreen
+      onComplete={handleOnboardingComplete}
+      defaultCurrency={defaultCurrency || 'MXN'}
+    />
+  );
+
   return (
-    <UserCategoriesProvider userCategories={userCategories}>
+    <UserCategoriesProvider userCategories={userCategories} activeCategories={activeCategories}>
     <div className="app-shell">
       <div className="screen-content" id="screen-content">
 
@@ -301,12 +440,16 @@ function AuthenticatedApp({ user, signOut }) {
             userCategories={userCategories}
             onCreateSubcategory={createSubcategory}
             onDeleteSubcategory={deleteSubcategory}
+            onCreateParentCategory={createParentCategory}
+            onUpdateCategoryColor={updateCustomCategoryColor}
+            onUpdateSystemCategoryColor={handleUpdateSystemCategoryColor}
             onGoToAccounts={() => {/* Cuentas lives inside HomeScreen now */}}
             accounts={accounts}
             onAddAccount={handleAddAccount}
             onUpdateAccount={handleUpdateAccount}
             onDeleteAccount={handleDeleteAccount}
             onTransfer={handleTransfer}
+            transfers={transfers}
             charges={charges}
             onAddCharge={handleAddCharge}
             onAddPayment={handleAddPayment}
@@ -315,6 +458,7 @@ function AuthenticatedApp({ user, signOut }) {
             recurring={recurring}
             onAddRecurring={handleAddRecurring}
             onConfirmRecurring={handleConfirmRecurring}
+            onMarkRecurringDone={handleMarkRecurringDone}
             onUpdateRecurring={handleUpdateRecurring}
             onDeleteRecurring={handleDeleteRecurring}
             quickAccess={quickAccess}
@@ -324,6 +468,12 @@ function AuthenticatedApp({ user, signOut }) {
             getLastExpense={getLastExpense}
             uniqueDescriptions={uniqueDescriptions}
             onQuickRegister={handleQuickRegister}
+            navigateTo={homeNav}
+            onNavigateDone={() => setHomeNav(null)}
+            budgets={budgets}
+            onAddBudget={addBudget}
+            onUpdateBudget={updateBudget}
+            onDeleteBudget={deleteBudget}
           />
         )}
 
@@ -405,13 +555,18 @@ function AuthenticatedApp({ user, signOut }) {
       )}
 
       {/* Toast */}
-      {toast && (
-        <Toast
-          key={toast + Date.now()}
-          message={toast}
-          onDone={() => setToast(null)}
-        />
-      )}
+      {toast && (() => {
+        const msg      = typeof toast === 'string' ? toast : toast.message;
+        const duration = typeof toast === 'object'  ? toast.duration : undefined;
+        return (
+          <Toast
+            key={msg + Date.now()}
+            message={msg}
+            duration={duration}
+            onDone={() => setToast(null)}
+          />
+        );
+      })()}
     </div>
     </UserCategoriesProvider>
   );
@@ -422,6 +577,36 @@ function AuthenticatedApp({ user, signOut }) {
 ══════════════════════════════════════ */
 export default function App() {
   const { session, user, loading, signIn, signUp, signOut } = useAuth();
+
+  useEffect(() => {
+    if (session?.access_token && user?.id) {
+      syncAuthToWidget({
+        url:          import.meta.env.VITE_SUPABASE_URL      ?? '',
+        anonKey:      import.meta.env.VITE_SUPABASE_ANON_KEY ?? '',
+        userId:       user.id,
+        token:        session.access_token,
+        refreshToken: session.refresh_token ?? '',
+      });
+    }
+  }, [session?.access_token, user?.id]);
+
+  // Re-sync auth token when app comes to foreground so widget always has a valid token
+  useEffect(() => {
+    if (!session?.access_token || !user?.id) return;
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        syncAuthToWidget({
+          url:          import.meta.env.VITE_SUPABASE_URL      ?? '',
+          anonKey:      import.meta.env.VITE_SUPABASE_ANON_KEY ?? '',
+          userId:       user.id,
+          token:        session.access_token,
+          refreshToken: session.refresh_token ?? '',
+        });
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [session?.access_token, user?.id]);
 
   if (loading)  return <LoadingScreen />;
   if (!session) return <LoginScreen onSignIn={signIn} onSignUp={signUp} />;

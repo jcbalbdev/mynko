@@ -31,11 +31,14 @@
   --green:  #34c759;
   --red:    #ff3b30;
   --orange: #ff9500;
-  --yellow: #ffcc00;
+  --yellow: #FEA503;
   --teal:   #5ac8fa;
   --indigo: #5856d6;
   --pink:   #ff2d55;
   --purple: #af52de;
+  --color-dark:    #111214;
+  --color-success: #1a7a34;
+  --color-purple:  #7C3AED;
   --space-xs:  4px;
   --space-sm:  8px;
   --space-md:  16px;
@@ -111,7 +114,7 @@ body {
   justify-content: space-between;
   align-items: center;
   gap: var(--space-sm);
-  background: #111214;
+  background: var(--color-dark);
   display: flex;
   position: absolute;
   bottom: 0;
@@ -174,7 +177,7 @@ body {
   font-family: var(--font);
   cursor: pointer;
   letter-spacing: 0.2px;
-  background: #111214;
+  background: var(--color-dark);
   border: none;
   padding: 17px;
   font-size: 17px;
@@ -292,7 +295,7 @@ body {
 .month-label { color: var(--label-primary); font-size: 16px; font-weight: 800; }
 .month-nav-btn { border-radius: var(--radius-full); background: var(--fill-tertiary); cursor: pointer; width: 32px; height: 32px; color: var(--blue); border: none; justify-content: center; align-items: center; transition: background 0.15s; display: flex; }
 .month-nav-btn:active { background: var(--bg-tertiary); }
-.toast { bottom: calc(var(--tab-bar-height) + 16px); background: var(--label-primary); color: #fff; border-radius: var(--radius-full); white-space: nowrap; z-index: 300; box-shadow: var(--shadow-lg); max-width: 300px; padding: 12px 22px; font-size: 14px; font-weight: 700; animation: 0.3s cubic-bezier(.34,1.56,.64,1) both toastIn; position: fixed; left: 50%; transform: translate(-50%) translateY(0); }
+.toast { bottom: calc(var(--tab-bar-height) + 16px); background: var(--label-primary); color: #fff; border-radius: var(--radius-full); white-space: normal; text-align: center; line-height: 1.45; z-index: 300; box-shadow: var(--shadow-lg); padding: 12px 20px; font-size: 14px; font-weight: 700; animation: 0.3s cubic-bezier(.34,1.56,.64,1) both toastIn; position: fixed; left: 24px; right: 24px; }
 .quick-stats { gap: var(--space-sm); padding: 0 var(--space-md); margin-top: var(--space-sm); display: flex; }
 .stat-mini { background: var(--bg-secondary); border-radius: var(--radius-lg); padding: 14px var(--space-sm); box-shadow: var(--shadow-sm); text-align: center; flex: 1; }
 .stat-mini .stat-mini-value { color: var(--label-primary); font-size: 18px; font-weight: 900; }
@@ -331,7 +334,7 @@ body {
 @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
 @keyframes slideUp { 0% { opacity: 0; transform: translateY(24px); } 100% { opacity: 1; transform: translateY(0); } }
 @keyframes fadeSlideUp { 0% { opacity: 0; transform: translateY(12px); } 100% { opacity: 1; transform: translateY(0); } }
-@keyframes toastIn { 0% { opacity: 0; transform: translate(-50%) translateY(20px); } 100% { opacity: 1; transform: translate(-50%) translateY(0); } }
+@keyframes toastIn { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
 .animate-in { animation: 0.3s cubic-bezier(.34,1.2,.64,1) both fadeSlideUp; }
 
 /* ── Dark mode variables ── */
@@ -359,6 +362,9 @@ body {
 [data-theme="dark"] body { background: #000; }
 [data-theme="dark"] .nav-bar { background: rgba(28,28,30,.92); }
 
+/* Buttons */
+[data-theme="dark"] .btn-primary { background: #000; }
+
 /* HomeScreen backgrounds */
 [data-theme="dark"] .home-scroll           { background: var(--bg-primary); }
 [data-theme="dark"] .home-header-minimal   { background: var(--bg-primary); }
@@ -379,6 +385,15 @@ body {
 [data-theme="dark"] .acc-wheel-top-fade { background: linear-gradient(to bottom, var(--bg-primary) 0%, transparent 100%); }
 [data-theme="dark"] .acc-wheel-bot-fade { background: linear-gradient(to top,   var(--bg-primary) 0%, transparent 100%); }
 
+/* FAB fade overlay */
+[data-theme="dark"] .fab-fade { background: linear-gradient(to top, var(--bg-primary) 60%, transparent 100%); }
+
+/* HomeScreen search pill + menu btn */
+[data-theme="dark"] .home-search-pill             { background: #333335; }
+[data-theme="dark"] .home-avatar-btn              { background: #333335; color: #fff; }
+[data-theme="dark"] .home-pill-profile-btn        { color: #fff; }
+[data-theme="dark"] .home-pill-search-icon-btn    { color: #fff; }
+
 /* HomeScreen search pill (when open) */
 [data-theme="dark"] .home-search-pill--open { background: rgba(255,255,255,.1); box-shadow: 0 0 0 1.5px rgba(255,255,255,.1); }
 [data-theme="dark"] .home-search-pill--open .home-pill-profile-btn { color: rgba(255,255,255,.75); }
@@ -387,10 +402,18 @@ body {
 [data-theme="dark"] .home-pill-input-icon         { color: rgba(255,255,255,.5); }
 [data-theme="dark"] .home-pill-close-btn          { color: rgba(255,255,255,.6); }
 
+/* HomeScreen menu dropdown */
+[data-theme="dark"] .home-menu-dropdown { background: #333335; box-shadow: 0 8px 30px rgba(0,0,0,.4); }
+[data-theme="dark"] .home-menu-item:active,
+[data-theme="dark"] .home-menu-item:hover { background: rgba(255,255,255,.08); }
+[data-theme="dark"] .home-menu-divider   { background: rgba(255,255,255,.1); }
+
 /* Shared field */
 [data-theme="dark"] .shared-field-group { background: var(--bg-secondary); box-shadow: none; }
 
 /* AccountsCarouselView cards */
+[data-theme="dark"] .acw-portrait-add        { background: #333335; border-color: rgba(255,255,255,.15); }
+[data-theme="dark"] .acw-portrait-add:active { background: #3a3a3c; }
 [data-theme="dark"] .acc-wheel-card       { background: var(--bg-secondary); box-shadow: none; }
 [data-theme="dark"] .acc-card             { background: var(--bg-secondary); }
 [data-theme="dark"] .acc-detail-strip     { background: var(--bg-secondary); }
@@ -404,15 +427,33 @@ body {
 [data-theme="dark"] .acw-add-circle       { background: var(--bg-tertiary); }
 
 /* TransactionRow */
-[data-theme="dark"] .exp-row  { background: rgba(255,255,255,.1); box-shadow: none; }
-[data-theme="dark"] .debt-row { background: rgba(255,255,255,.1); box-shadow: none; }
+[data-theme="dark"] .exp-row          { background: rgba(255,255,255,.1); box-shadow: none; }
+[data-theme="dark"] .debt-row         { background: rgba(255,255,255,.1); box-shadow: none; }
+[data-theme="dark"] .exp-row-desc     { color: #fff; }
+[data-theme="dark"] .exp-row-amount   { background: rgba(255,255,255,.12); color: #fff; }
+[data-theme="dark"] .exp-day-divider  { background: #1c1c1e; }
+
+/* QuickAccessScreen */
+[data-theme="dark"] .qa-row-card      { background: #2c2c2e; }
+[data-theme="dark"] .qa-row-amount    { background: rgba(255,255,255,.12); color: #fff; }
+
+/* ExchangeView */
+[data-theme="dark"] .exchange-total-card { background: #2c2c2e; box-shadow: none; }
+
+/* Toast */
+[data-theme="dark"] .toast { background: #fff; color: #1c1c1e; }
+[data-theme="dark"] .qa-modal         { background: #2c2c2e; }
+[data-theme="dark"] .qa-modal-title   { color: #fff; }
+[data-theme="dark"] .qa-modal-body    { color: rgba(255,255,255,.6); }
+[data-theme="dark"] .qa-modal-btn-cancel { background: #3a3a3c; }
 
 /* BalanceView — mes seleccionado */
 [data-theme="dark"] .balance-month-chip.active { background: rgba(255,255,255,.2); color: #fff; }
 
 /* RecurringListView */
-[data-theme="dark"] .rec-card         { background: var(--bg-secondary); }
+[data-theme="dark"] .rec-card         { background: rgba(118,118,128,.18); }
 [data-theme="dark"] .rec-tab.active   { background: var(--bg-secondary); box-shadow: none; }
+[data-theme="dark"] .rec-hero-count   { color: #fff; }
 
 /* BaseSheet — type toggle active button */
 [data-theme="dark"] .type-btn.active { background: var(--bg-secondary); box-shadow: 0 1px 6px rgba(0,0,0,.3); }

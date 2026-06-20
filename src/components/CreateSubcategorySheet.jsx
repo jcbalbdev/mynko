@@ -7,11 +7,23 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Check } from 'lucide-react';
 import BaseSheet   from './ui/BaseSheet';
 import { CATEGORIES } from '../utils/categories';
-import { useUserCategoriesCtx } from '../context/UserCategoriesContext';
+import { useUserCategoriesCtx, useActiveCategoriesCtx } from '../context/UserCategoriesContext';
 import './ui/CategoryPicker.css';
 
 export default function CreateSubcategorySheet({ onClose, onCreated, onSelectExisting }) {
-  const userCategories = useUserCategoriesCtx();
+  const userCategories        = useUserCategoriesCtx();
+  const activeCategories      = useActiveCategoriesCtx();
+  const visibleCategories = useMemo(() => {
+    const userSubIds = new Set(userCategories.map(c => c.parent_id).filter(Boolean));
+    const active = activeCategories
+      ? CATEGORIES.filter(c => activeCategories.includes(c.id))
+      : CATEGORIES.filter(c => userSubIds.has(c.id));
+    const customParents = userCategories.filter(c => !c.parent_id);
+    return [
+      ...active,
+      ...customParents.map(c => ({ id: c.id, label: c.name, color: c.color, bg: c.color })),
+    ];
+  }, [activeCategories, userCategories]);
 
   const [name,                  setName]                  = useState('');
   const [parentId,              setParentId]              = useState('');
@@ -158,23 +170,21 @@ export default function CreateSubcategorySheet({ onClose, onCreated, onSelectExi
         {/* Parent category selector */}
         <div className="form-section">
           <label className="form-section-label">¿A qué categoría pertenece?</label>
-          <div className="catpicker-grid" style={{ padding: '0 0 8px' }}>
-            {CATEGORIES.map(cat => {
+          <div className="catpicker-pills-row">
+            {visibleCategories.map(cat => {
               const isSelected = parentId === cat.id;
               return (
                 <button
                   key={cat.id}
                   type="button"
-                  className={`catpicker-cell${isSelected ? ' catpicker-cell--active' : ''}`}
+                  className={`catpicker-pill${isSelected ? ' catpicker-pill--active' : ''}`}
                   style={{ background: cat.color }}
                   onClick={() => setParentId(isSelected ? '' : cat.id)}
                 >
                   {isSelected && (
-                    <span className="catpicker-cell-check">
-                      <Check size={11} color="#007aff" strokeWidth={3} />
-                    </span>
+                    <Check size={11} color="#fff" strokeWidth={3} style={{ flexShrink: 0 }} />
                   )}
-                  <span className="catpicker-cell-name">{cat.label}</span>
+                  <span className="catpicker-pill-name">{cat.label}</span>
                 </button>
               );
             })}

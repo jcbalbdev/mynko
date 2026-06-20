@@ -6,8 +6,8 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { TYPE_FILTERS } from '../utils/categories';
 
-const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 import { getCurrencyByCode } from '../utils/currencies';
+import { MONTHS } from '../utils/dates';
 
 /**
  * @param {object[]} expenses       - All expense records
@@ -24,9 +24,9 @@ export function useHomeFilters(expenses, defaultCurrency, activeView) {
 
   const period      = periodMode;
   const typeFilter  = TYPE_FILTERS[typeIdx].id;
-  const periodLabel = periodMode.type === 'month'
-    ? MONTHS_FULL[periodMode.month]
-    : 'Personalizado';
+  const periodLabel = periodMode.type === 'month'  ? MONTHS[periodMode.month]
+                    : periodMode.type === 'year'   ? String(periodMode.year)
+                    : 'Personalizado';
 
   const cycleType = () => setTypeIdx(i => (i + 1) % TYPE_FILTERS.length);
 

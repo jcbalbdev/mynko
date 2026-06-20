@@ -5,18 +5,19 @@
  * and a configurable header (title + close + optional right slot).
  */
 import React from 'react';
-import { X, Check } from 'lucide-react';
+import { X, Check, ChevronLeft } from 'lucide-react';
 import './BaseSheet.css';
 
 /**
  * @param {string}    title        — Sheet title text
  * @param {function}  onClose      — Called when X or backdrop is tapped
+ * @param {function}  [onBack]     — If provided, renders a ← back button on the left and X on the right
  * @param {function}  [onSave]     — If provided, renders a ✓ save button on the right
  * @param {ReactNode} [headerRight]— Custom element to render on the right of the header
  *                                    (takes priority over onSave)
  * @param {ReactNode} children     — Sheet body content
  */
-export default function BaseSheet({ title, onClose, onSave, headerRight, children }) {
+export default function BaseSheet({ title, onClose, onBack, onSave, headerRight, children }) {
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) onClose();
   };
@@ -40,7 +41,18 @@ export default function BaseSheet({ title, onClose, onSave, headerRight, childre
         <div className="sheet-handle" />
 
         <div className="sheet-header">
-          {rightSlot ? (
+          {onBack ? (
+            // Layout: [← back] [title] [X close]
+            <>
+              <button className="sheet-close" onClick={onBack} aria-label="Volver">
+                <ChevronLeft size={18} strokeWidth={2.5} />
+              </button>
+              <span className="sheet-title">{title}</span>
+              <button className="sheet-close" onClick={onClose} aria-label="Cerrar">
+                <X size={16} />
+              </button>
+            </>
+          ) : rightSlot ? (
             // Layout: [close] [title] [right]
             <>
               <button className="sheet-close" onClick={onClose} aria-label="Cerrar">

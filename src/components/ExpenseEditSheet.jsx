@@ -12,11 +12,12 @@
  * - Shared paid toggle
  */
 import React, { useState } from 'react';
-import { Trash2, Check, X, Banknote, Building2, PiggyBank }  from 'lucide-react';
-import BaseSheet                 from './ui/BaseSheet';
-import { resolveCategory, CATEGORIES } from '../utils/categories';
-import { formatAmount }          from '../utils/expenses';
-import { getCurrencyByCode }     from '../utils/currencies';
+import { Trash2, Check, X, Banknote, Building2, PiggyBank } from 'lucide-react';
+import BaseSheet              from './ui/BaseSheet';
+import ConfirmDeleteSheet     from './ui/ConfirmDeleteSheet';
+import { resolveCategory }    from '../utils/categories';
+import { formatAmount }       from '../utils/formatters';
+import { getCurrencyByCode }  from '../utils/currencies';
 import { useUserCategoriesCtx } from '../context/UserCategoriesContext';
 import { getAccountTypeColor, getAccountTypeLabel } from '../utils/accounts';
 
@@ -36,9 +37,7 @@ export default function ExpenseEditSheet({
 }) {
   const userCategories = useUserCategoriesCtx();
   const subcat   = resolveCategory(expense.category, userCategories);  // subcategoría
-  const parentCat = subcat.parentId
-    ? CATEGORIES.find(c => c.id === subcat.parentId) ?? null
-    : CATEGORIES.find(c => c.id === expense.category) ?? null;          // categoría padre
+  const parentCat = subcat.parentId ? resolveCategory(subcat.parentId, userCategories) : null;
   const currency = getCurrencyByCode(expense.currency ?? 'MXN');
 
   // Cuenta vinculada
@@ -99,27 +98,11 @@ export default function ExpenseEditSheet({
   /* ── Confirmation overlay ── */
   if (confirmDel) {
     return (
-      <BaseSheet title={`¿Eliminar ${typeLabel}?`} onClose={() => setConfirmDel(false)}>
-        <div className="edit-confirm-body">
-          <p className="edit-confirm-text">
-            Esta acción no se puede deshacer. ¿Seguro que quieres eliminar este {typeLabel}?
-          </p>
-          <button
-            className="btn-danger"
-            onClick={handleDelete}
-            id="btn-confirm-delete"
-          >
-            <Trash2 size={17} /> Sí, eliminar {typeLabel}
-          </button>
-          <button
-            className="btn-secondary"
-            onClick={() => setConfirmDel(false)}
-            id="btn-cancel-delete"
-          >
-            Cancelar
-          </button>
-        </div>
-      </BaseSheet>
+      <ConfirmDeleteSheet
+        itemLabel={typeLabel}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDel(false)}
+      />
     );
   }
 
@@ -127,20 +110,38 @@ export default function ExpenseEditSheet({
     <BaseSheet
       title={expense.description || subcat.label}
       onClose={onClose}
-      /* Pass trash icon action instead of the green save button */
-      onSave={null}
       headerRight={
-        <button
-          className="sheet-trash-btn"
-          onClick={() => setConfirmDel(true)}
-          aria-label={`Eliminar ${typeLabel}`}
-          id="btn-open-delete-confirm"
-        >
+        <button className="sheet-trash-btn" onClick={() => setConfirmDel(true)} aria-label={`Eliminar ${typeLabel}`} id="btn-open-delete-confirm">
           <Trash2 size={18} strokeWidth={2.5} />
         </button>
       }
     >
-      {/* ── Fecha + Hora ── */}
+      {/* ── Hero: monto + categoría ── */}
+      <div className="txn-edit-hero">
+        <div className="txn-edit-amount-wrap">
+          <span className="txn-edit-currency">{currency.symbol}</span>
+          <input
+            className="txn-edit-amount-input"
+            type="number"
+            inputMode="decimal"
+            value={amount}
+            onChange={e => setAmount(e.target.value)}
+            min="0"
+            step="0.01"
+            id="edit-amount-field"
+            aria-label="Monto"
+            style={{ width: `${Math.max((String(amount) || '0').length, 2) * 27 + 8}px` }}
+          />
+        </div>
+        <div className="txn-edit-cat-pills">
+          {parentCat && parentCat.id !== subcat.id && (
+            <span className="txn-edit-cat-pill" style={{ background: subcat.bg ?? subcat.color }}>{parentCat.label}</span>
+          )}
+          <span className="txn-edit-cat-pill" style={{ background: subcat.bg ?? subcat.color }}>{subcat.label}</span>
+        </div>
+      </div>
+
+      {/* ── Metadata card ── */}
       <div className="edit-info-card">
         <div className="edit-info-row">
           <span className="edit-info-label">Fecha</span>
@@ -151,31 +152,11 @@ export default function ExpenseEditSheet({
           <span className="edit-info-label">Hora</span>
           <span className="edit-info-value">{timeStr}</span>
         </div>
-      </div>
-
-      {/* ── Tipo de transacción + Tipo de cuenta ── */}
-      <div className="edit-info-card" style={{ marginTop: 10 }}>
+        <div className="edit-info-divider" />
         <div className="edit-info-row">
           <span className="edit-info-label">Tipo</span>
-          <span
-            className="edit-type-pill"
-            style={{
-              background: expense.type === 'ingreso'   ? '#34A853'
-                        : expense.type === 'cambio'    ? '#5C6BC0'
-                        : expense.type === 'compartido'? '#F57C00'
-                        : '#EA4335',
-              color: '#fff',
-              fontWeight: 800,
-              fontSize: 11,
-              padding: '3px 9px',
-              borderRadius: 20,
-              display: 'inline-block',
-            }}
-          >
-            {expense.type === 'ingreso'    ? 'Ingreso'
-           : expense.type === 'cambio'    ? 'Cambio'
-           : expense.type === 'compartido'? 'Compartido'
-           : 'Gasto'}
+          <span className="txn-type-pill">
+            {expense.type === 'ingreso' ? 'Ingreso' : expense.type === 'cambio' ? 'Cambio' : expense.type === 'compartido' ? 'Compartido' : 'Gasto'}
           </span>
         </div>
         {linkedAccount && (
@@ -184,109 +165,40 @@ export default function ExpenseEditSheet({
             <div className="edit-info-row">
               <span className="edit-info-label">Cuenta</span>
               <span className="edit-info-value edit-info-account">
-                {AccIcon && <AccIcon size={13} strokeWidth={2.2} style={{ color: getAccountTypeColor(linkedAccount.type), flexShrink: 0 }} />}
+                {AccIcon && <AccIcon size={13} strokeWidth={2.2} style={{ color: 'var(--label-tertiary)', flexShrink: 0 }} />}
                 <span>{linkedAccount.name}</span>
-                <span className="edit-acc-type-badge" style={{ background: getAccountTypeColor(linkedAccount.type) + '22', color: getAccountTypeColor(linkedAccount.type) }}>
-                  {getAccountTypeLabel(linkedAccount.type)}
-                </span>
               </span>
             </div>
           </>
         )}
-        {/* ── Lugar ── */}
         <div className="edit-info-divider" />
         <div className="edit-info-row">
           <span className="edit-info-label">Lugar</span>
-          {location.trim() ? (
-            <span className="edit-info-value">{location.trim()}</span>
-          ) : (
-            <span className="edit-no-location-pill">Sin especificar</span>
-          )}
+          {location.trim()
+            ? <span className="edit-info-value">{location.trim()}</span>
+            : <span className="edit-no-location-pill">Sin especificar</span>
+          }
         </div>
       </div>
 
-      {/* ── Subcategoría + Categoría padre ── */}
-      <div className="edit-info-card" style={{ marginTop: 10 }}>
-        {parentCat && parentCat.id !== subcat.id && (
-          <>
-            <div className="edit-info-row">
-              <span className="edit-info-label">Categoría</span>
-              <span
-                className="edit-cat-pill"
-                style={{ background: parentCat.bg, color: '#fff', fontWeight: 800, fontSize: 11, padding: '3px 9px', borderRadius: 20, display: 'inline-block' }}
-              >
-                {parentCat.label}
-              </span>
-            </div>
-            <div className="edit-info-divider" />
-          </>
-        )}
-        <div className="edit-info-row">
-          <span className="edit-info-label">{parentCat && parentCat.id !== subcat.id ? 'Subcategoría' : 'Categoría'}</span>
-          <span
-            className="edit-cat-pill"
-            style={{ background: subcat.bg ?? subcat.color, color: '#fff', fontWeight: 800, fontSize: 11, padding: '3px 9px', borderRadius: 20, display: 'inline-block' }}
-          >
-            {subcat.label}
-          </span>
-        </div>
-      </div>
-
-
-      {/* ── Monto editable ── */}
-      <div className="edit-section-label" style={{ marginTop: 10 }}>Monto</div>
-      <div className="edit-amount-row">
-        <input
-          className="edit-amount-input"
-          type="number"
-          inputMode="decimal"
-          value={amount}
-          onChange={e => setAmount(e.target.value)}
-          min="0"
-          step="0.01"
-          id="edit-amount-field"
-          aria-label="Monto"
-        />
-        <span className="edit-amount-currency">{currency.code}</span>
-      </div>
-
-
-      {/* ── Shared paid toggle ── */}
+      {/* ── Shared paid ── */}
       {isShared && debtor && (
-        <div className="shared-paid-section" style={{ marginTop: 16 }}>
+        <div className="shared-paid-section" style={{ marginTop: 10 }}>
           <div className="shared-paid-row">
             <div className="shared-paid-info">
               <span className="shared-paid-label">¿{debtor} te pagó?</span>
-              {owes > 0 && (
-                <span className="shared-paid-amount">
-                  {formatAmount(owes)} {currency.code}
-                </span>
-              )}
+              {owes > 0 && <span className="shared-paid-amount">{formatAmount(owes)} {currency.symbol}</span>}
             </div>
-            <button
-              type="button"
-              className={`shared-paid-toggle${sharedPaid ? ' is-paid' : ''}`}
-              onClick={handleTogglePaid}
-              id="btn-shared-paid-toggle"
-              aria-pressed={sharedPaid}
-              aria-label={sharedPaid ? 'Marcar como pendiente' : 'Marcar como pagado'}
-            >
-              <span className="toggle-knob">
-                {sharedPaid ? <Check size={12} strokeWidth={3} /> : <X size={12} strokeWidth={3} />}
-              </span>
+            <button type="button" className={`shared-paid-toggle${sharedPaid ? ' is-paid' : ''}`} onClick={handleTogglePaid} id="btn-shared-paid-toggle" aria-pressed={sharedPaid}>
+              <span className="toggle-knob">{sharedPaid ? <Check size={12} strokeWidth={3} /> : <X size={12} strokeWidth={3} />}</span>
               <span className="toggle-label">{sharedPaid ? 'Sí' : 'No'}</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* ── Save button ── */}
-      <button
-        className="btn-primary"
-        onClick={handleSave}
-        id="btn-save-expense"
-        style={{ marginTop: 24 }}
-      >
+      {/* ── Save ── */}
+      <button className="btn-primary" onClick={handleSave} id="btn-save-expense" style={{ marginTop: 16 }}>
         Guardar cambios
       </button>
     </BaseSheet>

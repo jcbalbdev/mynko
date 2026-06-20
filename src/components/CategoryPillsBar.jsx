@@ -1,5 +1,6 @@
 import React, { useRef, useCallback, useMemo } from 'react';
 import './CategoryPillsBar.css';
+import { useTheme } from '../context/ThemeContext';
 
 const LONG_PRESS_MS = 460;
 
@@ -10,6 +11,8 @@ export default function CategoryPillsBar({
   onHoverOption,
   onLongPressRelease,
 }) {
+  const { theme } = useTheme();
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const timerRef       = useRef(null);
   const didLongRef     = useRef(false);
   const hoveredIdRef   = useRef(null);
@@ -100,7 +103,7 @@ export default function CategoryPillsBar({
         <button
           key={item.category}
           className="cat-pill"
-          style={{ background: item.bg }}
+          style={{ background: isDark ? '#333335' : '#EEEEEE', color: isDark ? '#fff' : '#000' }}
           onClick={() => handleClick(item.category)}
           onTouchStart={(e) => handleTouchStart(item.category, e)}
           onTouchMove={handleTouchMove}

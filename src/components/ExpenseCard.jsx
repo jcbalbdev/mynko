@@ -1,25 +1,18 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Trash2 } from 'lucide-react';
-import { resolveCategory, formatCurrency, formatTime } from '../utils/categories';
+import { resolveCategory, formatTime } from '../utils/categories';
+import { formatAmountWithSymbol } from '../utils/currencies';
 import { useUserCategoriesCtx } from '../context/UserCategoriesContext';
+import { useSwipeToDelete } from '../hooks/useSwipeToDelete';
 
 export default function ExpenseCard({ expense, onDelete, animate }) {
   const userCategories = useUserCategoriesCtx();
   const cat = resolveCategory(expense.category, userCategories);
   const [swiped, setSwiped] = useState(false);
-  const touchStartX = useRef(null);
-
-  const handleTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = (e) => {
-    if (touchStartX.current === null) return;
-    const dx = e.changedTouches[0].clientX - touchStartX.current;
-    if (dx < -50) setSwiped(true);
-    if (dx > 20) setSwiped(false);
-    touchStartX.current = null;
-  };
+  const { onTouchStart: handleTouchStart, onTouchEnd: handleTouchEnd } = useSwipeToDelete({
+    onSwipe:   () => setSwiped(true),
+    onRestore: () => setSwiped(false),
+  });
 
   return (
     <div className="expense-item-wrap">
@@ -41,7 +34,7 @@ export default function ExpenseCard({ expense, onDelete, animate }) {
           <div className="expense-cat">{cat.label} · {formatTime(expense.date)}</div>
         </div>
         <div className="expense-right">
-          <div className="expense-amount">{formatCurrency(expense.amount)}</div>
+          <div className="expense-amount">{formatAmountWithSymbol(expense.amount, expense.currency ?? 'MXN')}</div>
         </div>
       </div>
 

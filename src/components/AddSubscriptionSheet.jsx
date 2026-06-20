@@ -3,100 +3,61 @@
  * Form for creating a subscription (auto-registered on due date).
  * Frequency options: monthly (day of month) or yearly (day + month).
  */
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import './FormSheets.css';
-import BaseSheet           from './ui/BaseSheet';
-import FormSection         from './ui/FormSection';
-import AmountInput         from './ui/AmountInput';
-import CurrencyPicker      from './ui/CurrencyPicker';
-import DescriptionInput    from './ui/DescriptionInput';
-import LocationInput       from './ui/LocationInput';
-import CategoryPickerField from './ui/CategoryPickerField';
-import AccountPickerField  from './ui/AccountPickerField';
-import { useSubcategoryForm } from '../hooks/useSubcategoryForm';
+import BaseSheet              from './ui/BaseSheet';
+import FormSection            from './ui/FormSection';
+import ToggleGroup            from './ui/ToggleGroup';
+import TransactionFormFields  from './ui/TransactionFormFields';
+import { useTransactionForm } from '../hooks/useTransactionForm';
+import { MONTHS }             from '../utils/dates';
 
 const MONTH_DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
 
-const MONTHS = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+const FREQ_OPTIONS = [
+  { value: 'monthly', label: 'Mensual' },
+  { value: 'yearly',  label: 'Anual'   },
 ];
 
 export default function AddSubscriptionSheet({
-  onAdd,
-  onClose,
+  onAdd, onClose,
   defaultCurrency = 'MXN',
   expenses = [],
   onCreateSubcategory,
   accounts = [],
 }) {
-  const [amount,      setAmount]      = useState('');
-  const [currency,    setCurrency]    = useState(defaultCurrency);
-  const [description, setDescription] = useState('');
-  const [location,    setLocation]    = useState('');
-  const [accountId,   setAccountId]   = useState(accounts[0]?.id ?? '');
   const [frequency,   setFrequency]   = useState('monthly');
   const [dayOfMonth,  setDayOfMonth]  = useState(1);
   const [yearlyDay,   setYearlyDay]   = useState(1);
   const [yearlyMonth, setYearlyMonth] = useState(1);
 
-  const {
-    category, setCategory, activeColor,
-    showCreateSubcat, openCreateSubcat, closeCreateSubcat,
-    handleCreateSubcategory,
-  } = useSubcategoryForm(onCreateSubcategory, '');
+  const form = useTransactionForm({
+    defaultCurrency, expenses, accounts, onCreateSubcategory,
+  });
 
+  /* Auto-fill from last expense in the selected category */
   const handleCategoryChange = (cat) => {
-    setCategory(cat);
+    form.setCategory(cat);
     const last = expenses.find(e => e.category === cat && e.type !== 'ingreso');
     if (!last) return;
-    if (!amount)      setAmount(String(last.amount));
-    if (!description) setDescription(last.description ?? '');
-    if (!location)    setLocation(last.location ?? '');
-    if (last.currency)  setCurrency(last.currency);
-    if (last.accountId) setAccountId(last.accountId);
+    if (!form.amount)      form.setAmount(String(last.amount));
+    if (!form.description) form.setDescription(last.description ?? '');
+    if (!form.location)    form.setLocation(last.location ?? '');
+    if (last.currency)     form.setCurrency(last.currency);
+    if (last.accountId)    form.setAccountId(last.accountId);
   };
-
-  const locationSuggestions = useMemo(() => {
-    const set = new Set(expenses.map(e => e.location?.trim()).filter(Boolean));
-    return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [expenses]);
-
-  const descriptionSuggestions = useMemo(() => {
-    const set = new Set(expenses.map(e => e.description?.trim()).filter(Boolean));
-    return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [expenses]);
-
-  const handleDescriptionPick = (desc) => {
-    const last = expenses
-      .filter(e => e.description?.trim() === desc)
-      .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-    if (!last) return;
-    if (last.location)  setLocation(last.location);
-    if (last.accountId) setAccountId(last.accountId);
-    if (last.category)  setCategory(last.category);
-  };
-
-  const isValid = parseFloat(amount) > 0 && category !== '';
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!isValid) return;
-    onAdd({
+    if (!form.isValid) return;
+    onAdd(form.buildPayload({
       entryType:   'subscription',
-      amount:      parseFloat(amount),
-      currency,
-      description: description.trim(),
-      location:    location.trim() || null,
-      category,
-      color:       activeColor,
-      accountId:   accountId || null,
       frequency,
       daysOfWeek:  [],
       dayOfMonth:  frequency === 'monthly' ? dayOfMonth : null,
       yearlyDay:   frequency === 'yearly'  ? yearlyDay  : null,
       yearlyMonth: frequency === 'yearly'  ? yearlyMonth : null,
-    });
+    }));
     onClose();
   };
 
@@ -104,57 +65,27 @@ export default function AddSubscriptionSheet({
     <BaseSheet title="Nueva suscripción" onClose={onClose}>
       <form onSubmit={handleSubmit}>
 
-        <AmountInput
-          value={amount}
-          onChange={setAmount}
-          currency={currency}
-        />
-
-        <DescriptionInput
-          value={description}
-          onChange={setDescription}
-          onPick={handleDescriptionPick}
-          suggestions={descriptionSuggestions}
-          placeholder="Descripción (opcional)"
-        />
-
-        <LocationInput
-          value={location}
-          onChange={setLocation}
-          suggestions={locationSuggestions}
-          placeholder="Plataforma, proveedor, etc."
-          maxLength={60}
-        />
-
-        <FormSection label="Moneda">
-          <CurrencyPicker selected={currency} onSelect={setCurrency} />
-        </FormSection>
-
-        <AccountPickerField accounts={accounts} value={accountId} onChange={setAccountId} />
-
-        <CategoryPickerField
-          selected={category}
-          onSelect={handleCategoryChange}
+        <TransactionFormFields
+          amount={form.amount}           onAmountChange={form.setAmount}
+          description={form.description} onDescriptionChange={form.setDescription}
+          onDescriptionPick={form.handleDescriptionPick}
+          descriptionSuggestions={form.descriptionSuggestions}
+          descriptionPlaceholder="Descripción (opcional)"
+          location={form.location}       onLocationChange={form.setLocation}
+          locationSuggestions={form.locationSuggestions}
+          locationPlaceholder="Plataforma, proveedor, etc."
+          showDate={false}
+          currency={form.currency}       onCurrencyChange={form.setCurrency}
+          accounts={accounts}            accountId={form.accountId}  onAccountIdChange={form.setAccountId}
           expenses={expenses}
-          showCreateSubcat={showCreateSubcat}
-          onOpenCreate={openCreateSubcat}
-          onCloseCreate={closeCreateSubcat}
-          onCreated={handleCreateSubcategory}
+          category={form.category}       onCategoryChange={handleCategoryChange}
+          showCreateSubcat={form.showCreateSubcat}
+          onOpenCreate={form.openCreateSubcat}   onCloseCreate={form.closeCreateSubcat}
+          onCreated={form.handleCreateSubcategory}
         />
 
         <FormSection label="Frecuencia">
-          <div className="type-toggle" role="group">
-            <button
-              type="button"
-              className={`type-btn${frequency === 'monthly' ? ' active' : ''}`}
-              onClick={() => setFrequency('monthly')}
-            >Mensual</button>
-            <button
-              type="button"
-              className={`type-btn${frequency === 'yearly' ? ' active' : ''}`}
-              onClick={() => setFrequency('yearly')}
-            >Anual</button>
-          </div>
+          <ToggleGroup options={FREQ_OPTIONS} value={frequency} onChange={setFrequency} />
         </FormSection>
 
         {frequency === 'monthly' && (
@@ -217,7 +148,7 @@ export default function AddSubscriptionSheet({
           </>
         )}
 
-        <button type="submit" className="btn-primary" disabled={!isValid}>
+        <button type="submit" className="btn-primary" disabled={!form.isValid}>
           Agregar suscripción
         </button>
       </form>

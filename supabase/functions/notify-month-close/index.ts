@@ -23,12 +23,26 @@ async function push(at: string, token: string, title: string, body: string) {
   await fetch(`https://fcm.googleapis.com/v1/projects/${pid}/messages:send`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: { token, notification: { title, body } } }),
+    body: JSON.stringify({ message: { token, notification: { title, body }, android: { notification: { icon: 'ic_launcher_cat' } } } }),
   })
 }
 
 const MONTHS = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']
 function fmt(n: number) { return n.toLocaleString('es-MX', { maximumFractionDigits: 0 }) }
+
+const BUILT_IN_LABELS: Record<string, string> = {
+  food: 'Restaurantes', services: 'Servicios', entertainment: 'Entretenimiento',
+  family: 'Familia', education: 'Educación', work: 'Trabajo', technology: 'Tecnología',
+  transport: 'Transporte', savings: 'Finanzas', home: 'Hogar', donations: 'Mascotas',
+  travel: 'Viajes', health: 'Salud', unexpected: 'Imprevistos', shopping: 'Compras',
+  clothing: 'Vestimenta', exchange: 'Cambio', credit_payment: 'Pago de Tarjeta',
+  initial_balance: 'Saldo inicial',
+}
+
+function resolveCategoryLabel(id: string, userCats: any[]): string {
+  if (BUILT_IN_LABELS[id]) return BUILT_IN_LABELS[id]
+  return userCats.find((c: any) => c.id === id)?.name ?? id
+}
 
 serve(async () => {
   const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
@@ -69,14 +83,17 @@ serve(async () => {
     // Top category
     const cats: Record<string, number> = {}
     for (const e of lastExp ?? []) cats[e.category] = (cats[e.category] ?? 0) + Number(e.amount)
-    const topCat = Object.entries(cats).sort((a, b) => b[1] - a[1])[0]?.[0] ?? ''
+    const topCatId = Object.entries(cats).sort((a, b) => b[1] - a[1])[0]?.[0] ?? ''
 
-    let bodyText = `Gastaste $${fmt(lastTotal)}`
+    const { data: userCats } = await sb.from('user_categories').select('id, name').eq('user_id', userId)
+    const topCat = topCatId ? resolveCategoryLabel(topCatId, userCats ?? []) : ''
+
+    let bodyText = `Gastaste S/ ${fmt(lastTotal)}`
     if (prevTotal > 0) {
       const diff = Math.abs(lastTotal - prevTotal)
       bodyText += lastTotal < prevTotal
-        ? ` — $${fmt(diff)} menos que el mes anterior.`
-        : ` — $${fmt(diff)} más que el mes anterior.`
+        ? ` — S/ ${fmt(diff)} menos que el mes anterior.`
+        : ` — S/ ${fmt(diff)} más que el mes anterior.`
     }
     if (topCat) bodyText += ` Tu categoría más alta: ${topCat}.`
 

@@ -43,12 +43,17 @@ function DrumPicker({ items, selectedIndex, onChange, visible = 5 }) {
 
 export default function PeriodSheet({ periodMode, onSave, onClose }) {
   const isCustom = periodMode?.type === 'custom';
-  const [tab, setTab] = useState(isCustom ? 'custom' : 'month');
+  const isYear   = periodMode?.type === 'year';
+  const [tab, setTab] = useState(isYear ? 'year' : isCustom ? 'custom' : 'month');
 
   // ── Month tab ──
   const [month, setMonth] = useState(periodMode?.month ?? new Date().getMonth());
   const [year,  setYear]  = useState(periodMode?.year  ?? new Date().getFullYear());
   const yearIdx = Math.max(0, YEARS.indexOf(year));
+
+  // ── Year tab ──
+  const [yearOnly, setYearOnly] = useState(periodMode?.year ?? new Date().getFullYear());
+  const yearOnlyIdx = Math.max(0, YEARS.indexOf(yearOnly));
 
   // ── Custom tab ──
   const now      = new Date();
@@ -70,6 +75,8 @@ export default function PeriodSheet({ periodMode, onSave, onClose }) {
   const handleSave = () => {
     if (tab === 'month') {
       onSave({ type: 'month', month, year });
+    } else if (tab === 'year') {
+      onSave({ type: 'year', year: yearOnly });
     } else {
       const fy = YEARS[fromYear] ?? now.getFullYear();
       const ty = YEARS[toYear]   ?? now.getFullYear();
@@ -87,6 +94,7 @@ export default function PeriodSheet({ periodMode, onSave, onClose }) {
 
         <div className="period-tabs">
           <button type="button" className={`period-tab${tab === 'month'  ? ' active' : ''}`} onClick={() => setTab('month')}>Mes</button>
+          <button type="button" className={`period-tab${tab === 'year'   ? ' active' : ''}`} onClick={() => setTab('year')}>Año</button>
           <button type="button" className={`period-tab${tab === 'custom' ? ' active' : ''}`} onClick={() => setTab('custom')}>Personalizado</button>
         </div>
 
@@ -94,6 +102,12 @@ export default function PeriodSheet({ periodMode, onSave, onClose }) {
           <div className="drum-row">
             <DrumPicker items={MONTHS} selectedIndex={month}   onChange={setMonth} />
             <DrumPicker items={YEARS}  selectedIndex={yearIdx} onChange={i => setYear(YEARS[i])} />
+          </div>
+        )}
+
+        {tab === 'year' && (
+          <div className="drum-row" style={{ justifyContent: 'center' }}>
+            <DrumPicker items={YEARS} selectedIndex={yearOnlyIdx} onChange={i => setYearOnly(YEARS[i])} />
           </div>
         )}
 

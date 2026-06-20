@@ -4,15 +4,16 @@
  */
 import { useState } from 'react';
 import { Banknote, Building2, PiggyBank, CreditCard } from 'lucide-react';
+import './FormSheets.css';
 import './AddAccountSheet.css';
 import BaseSheet      from './ui/BaseSheet';
 import FormSection    from './ui/FormSection';
 import CurrencyPicker from './ui/CurrencyPicker';
 
 const ACCOUNT_TYPES = [
-  { value: 'efectivo', label: 'Efectivo', icon: Banknote,   color: '#34A853' },
-  { value: 'banco',    label: 'Banco',    icon: Building2,  color: '#4285F4' },
-  { value: 'ahorro',   label: 'Ahorro',   icon: PiggyBank,  color: '#FBBC05' },
+  { value: 'efectivo', label: 'Efectivo', icon: Banknote,   color: '#111214' },
+  { value: 'banco',    label: 'Banco',    icon: Building2,  color: '#111214' },
+  { value: 'ahorro',   label: 'Ahorro',   icon: PiggyBank,  color: '#111214' },
 ];
 
 export default function AddAccountSheet({ onAdd, onClose, defaultCurrency = 'MXN' }) {
@@ -72,7 +73,7 @@ export default function AddAccountSheet({ onAdd, onClose, defaultCurrency = 'MXN
         {/* Credit toggle */}
         <div className="credit-mode-toggle-row">
           <div className="credit-mode-toggle-info">
-            <CreditCard size={16} color="#7C3AED" />
+            <CreditCard size={16} color="#111214" />
             <span className="credit-mode-label">¿Es de crédito?</span>
           </div>
           <label className="ios-toggle">
@@ -233,9 +234,6 @@ export default function AddAccountSheet({ onAdd, onClose, defaultCurrency = 'MXN
                   onChange={e => setBalance(e.target.value)}
                 />
               </div>
-              <p className="form-hint-text">
-                Ingresa el saldo actual de esta cuenta. Podrás modificarlo solo esta vez.
-              </p>
             </FormSection>
           </>
         )}

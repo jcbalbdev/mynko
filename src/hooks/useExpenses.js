@@ -33,9 +33,10 @@ function rowToExpense(row) {
     location:        row.location          ?? '',
     creditAccountId: row.credit_account_id ?? null,
     // Exchange fields
-    fromCurrency: row.from_currency ?? null,
-    fromAmount:   row.from_amount   ? Number(row.from_amount) : null,
-    exchangeRate: row.exchange_rate ? Number(row.exchange_rate) : null,
+    fromCurrency:   row.from_currency   ?? null,
+    fromAmount:     row.from_amount     ? Number(row.from_amount) : null,
+    exchangeRate:   row.exchange_rate   ? Number(row.exchange_rate) : null,
+    fromAccountId:  row.from_account_id ?? null,
   };
 }
 
@@ -59,9 +60,10 @@ function expenseToRow(expense, userId) {
     location:          expense.location?.trim() || null,
     credit_account_id: expense.creditAccountId  ?? null,
     // Exchange fields
-    from_currency: expense.fromCurrency ?? null,
-    from_amount:   expense.fromAmount   ?? null,
-    exchange_rate: expense.exchangeRate ?? null,
+    from_currency:    expense.fromCurrency   ?? null,
+    from_amount:      expense.fromAmount     ?? null,
+    exchange_rate:    expense.exchangeRate   ?? null,
+    from_account_id:  expense.fromAccountId ?? null,
   };
 }
 
@@ -95,6 +97,35 @@ export function useExpenses(userId) {
 
   /* Fetch on mount and when userId changes */
   useEffect(() => { fetchExpenses(); }, [fetchExpenses]);
+
+  /* Real-time subscription — picks up changes from widget or other sources */
+  useEffect(() => {
+    if (!userId) return;
+
+    const channel = supabase
+      .channel(`expenses:${userId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'expenses', filter: `user_id=eq.${userId}` },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setExpenses(prev => {
+              if (prev.some(e => e.id === payload.new.id)) return prev;
+              return [rowToExpense(payload.new), ...prev];
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            setExpenses(prev => prev.map(e =>
+              e.id === payload.new.id ? rowToExpense(payload.new) : e
+            ));
+          } else if (payload.eventType === 'DELETE') {
+            setExpenses(prev => prev.filter(e => e.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [userId]);
 
   /* ── ADD ── */
   const addExpense = async (expense) => {

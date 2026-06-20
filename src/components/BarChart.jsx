@@ -1,7 +1,9 @@
 import React, { useMemo, useRef, useCallback } from 'react';
 import './BarChart.css';
 import { resolveCategory } from '../utils/categories';
+import { getCurrencyByCode } from '../utils/currencies';
 import { useUserCategoriesCtx } from '../context/UserCategoriesContext';
+import { useTheme } from '../context/ThemeContext';
 
 const MAX_BAR_HEIGHT = 180;
 const LONG_PRESS_MS  = 460;
@@ -9,18 +11,30 @@ const GHOST_BARS = [{ height: 180 }, { height: 110 }, { height: 65 }];
 
 export default function BarChart({
   expenses,
+  budgets = [],
   onBarPress,
   onBarLongPress,    // (catId, rect) — long press fired
   onHoverOption,     // (optId | null) — finger hovering over option
   onLongPressRelease,// (optId | null) — finger lifted
   emptyLabel = 'registros',
 }) {
+  const { theme } = useTheme();
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const userCategories = useUserCategoriesCtx();
   const sorted = useMemo(
     () => [...expenses].filter(e => e.amount > 0).sort((a, b) => b.amount - a.amount),
     [expenses]
   );
-  const maxAmount = sorted[0]?.amount || 1;
+
+  // maxAmount includes budget amounts so scale is consistent
+  const maxAmount = useMemo(() => {
+    let max = sorted[0]?.amount || 1;
+    for (const exp of sorted) {
+      const b = budgets.find(b => b.categoryId === exp.category && b.currency === exp.currency);
+      if (b?.amount > max) max = b.amount;
+    }
+    return max;
+  }, [sorted, budgets]);
 
   const timerRef        = useRef(null);
   const didLongRef      = useRef(false);
@@ -126,15 +140,67 @@ export default function BarChart({
         {sorted.map((exp, i) => {
           // Use pre-resolved label/bg from groupByCategory/groupBySubcategory,
           // fallback to resolveCategory only as a safety net
-          const cat        = (exp.label && exp.bg)
+          const cat       = (exp.label && exp.bg)
             ? { label: exp.label, bg: exp.bg }
             : resolveCategory(exp.category, userCategories);
-          const height     = Math.max(4, (exp.amount / maxAmount) * MAX_BAR_HEIGHT);
-          const isOutflow  = exp._isOutflowBar;
-          const barColor   = isOutflow ? '#FF6B6B' : cat.bg;
+          const isOutflow = exp._isOutflowBar;
+          const curSymbol = getCurrencyByCode(exp.currency ?? 'MXN').symbol;
+          const budget    = budgets.find(b => b.categoryId === exp.category && b.currency === exp.currency);
+
+          if (budget) {
+            const trackHeight = Math.max(4, (budget.amount / maxAmount) * MAX_BAR_HEIGHT);
+            const fillPct     = budget.amount > 0 ? Math.min(exp.amount / budget.amount, 1) : 0;
+            const fillHeight  = fillPct * trackHeight;
+            const isOver      = exp.amount > budget.amount;
+            const fillColor   = isOver ? '#E91933' : '#111214';
+            const budgetLabel = budget.amount % 1 === 0
+              ? `${budget.amount.toLocaleString('es-MX')} ${curSymbol}`
+              : `${budget.amount.toFixed(2)} ${curSymbol}`;
+            const spentLabel  = exp.amount % 1 === 0
+              ? `${exp.amount.toLocaleString('es-MX')} ${curSymbol}`
+              : `${exp.amount.toFixed(2)} ${curSymbol}`;
+            return (
+              <button
+                key={`${exp.id}-${exp.amount}`}
+                className="bar-col"
+                onClick={() => handleClick(exp.category)}
+                onTouchStart={(e) => handleTouchStart(exp.category, e)}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                onTouchCancel={handleTouchEnd}
+                aria-label={`${cat.label}: ${spentLabel} de ${budgetLabel}`}
+                id={`bar-${exp.id}`}
+              >
+                <div className="bar-top-amount">{budgetLabel}</div>
+                <div className="bar-group">
+                  <div
+                    className="bar-fill bar-fill--budget-track"
+                    style={{ height: trackHeight, animationDelay: `${i * 60}ms` }}
+                  >
+                    <div
+                      className="bar-fill--budget-inner"
+                      style={{ height: fillHeight, background: fillColor }}
+                    >
+                      {fillHeight >= 18 && (
+                        <div className="bar-fill--budget-spent-label">
+                          {spentLabel}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="bar-cat-pill" style={{ background: fillColor, color: '#fff', fontWeight: 700 }}>
+                    {cat.label}
+                  </div>
+                </div>
+              </button>
+            );
+          }
+
+          const height      = Math.max(4, (exp.amount / maxAmount) * MAX_BAR_HEIGHT);
+          const barColor    = isDark ? '#333335' : '#EEEEEE';
           const amountLabel = (isOutflow ? '-' : '') + (exp.amount % 1 === 0
-            ? `${exp.amount.toLocaleString('es-MX')} ${exp.currency ?? 'MXN'}`
-            : `${exp.amount.toFixed(2)} ${exp.currency ?? 'MXN'}`);
+            ? `${exp.amount.toLocaleString('es-MX')} ${curSymbol}`
+            : `${exp.amount.toFixed(2)} ${curSymbol}`);
 
           return (
             <button
@@ -151,7 +217,7 @@ export default function BarChart({
               <div className="bar-top-amount">{amountLabel}</div>
               <div className="bar-group">
                 <div className="bar-fill" style={{ height, background: barColor, animationDelay: `${i * 60}ms` }} />
-                <div className="bar-cat-pill" style={{ background: barColor, color: '#111', fontWeight: 700 }}>
+                <div className="bar-cat-pill" style={{ background: barColor, color: isDark ? '#fff' : '#000', fontWeight: 700 }}>
                   {cat.label}
                 </div>
               </div>

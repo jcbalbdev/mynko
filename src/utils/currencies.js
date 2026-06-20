@@ -92,12 +92,29 @@ export function detectDefaultCurrency() {
 
 
 
-/** Formatea un monto con el símbolo y código de la moneda. */
+/** Formatea un monto con el símbolo narrowSymbol de la moneda via Intl. */
+export function formatAmountWithSymbol(amount, currencyCode) {
+  if (amount == null || isNaN(Number(amount))) return '0';
+  const code = getCurrencyByCode(currencyCode).code;
+  try {
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: code,
+      currencyDisplay: 'narrowSymbol',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    const cur = getCurrencyByCode(currencyCode);
+    const formatted = new Intl.NumberFormat('es-MX', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+    return `${cur.symbol} ${formatted}`;
+  }
+}
+
+/** Formatea un monto con el símbolo de la moneda (sin código). */
 export function formatWithCurrency(amount, currencyCode) {
-  const cur = getCurrencyByCode(currencyCode);
-  const formatted = Number(amount).toLocaleString('es-MX', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-  return `${cur.symbol} ${formatted} ${cur.code}`;
+  return formatAmountWithSymbol(amount, currencyCode);
 }

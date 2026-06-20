@@ -3,7 +3,15 @@
 ══════════════════════════════════════ */
 
 .balance-view { padding: 0; }
-.balance-year-row { justify-content: center; align-items: center; gap: 20px; padding: 12px 0 8px; display: flex; }
+
+/* ── Picker year nav (used from HomeScreen BaseSheet) ── */
+.balance-picker-year-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 4px 0 20px;
+}
 .balance-nav-btn {
   background: var(--fill-secondary);
   width: 34px;
@@ -12,69 +20,163 @@
   cursor: pointer;
   border: none;
   border-radius: 50%;
-  justify-content: center;
-  align-items: center;
-  transition: background 0.15s;
   display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
 }
 .balance-nav-btn:active { background: var(--fill-tertiary); }
-.balance-year-label { color: var(--label-primary); text-align: center; min-width: 52px; font-size: 18px; font-weight: 700; }
-.balance-month-row {
-  scrollbar-width: none;
-  gap: 6px;
-  padding: 4px 16px 12px;
-  display: flex;
-  overflow-x: auto;
-}
-.balance-month-row::-webkit-scrollbar { display: none; }
-.balance-month-chip {
-  background: var(--fill-tertiary);
-  font-family: var(--font);
-  color: var(--label-secondary);
-  cursor: pointer;
-  border: none;
+.balance-year-label { color: var(--label-primary); font-size: 18px; font-weight: 700; min-width: 52px; text-align: center; }
+
+/* ── Summary card (dark) ── */
+.balance-summary-card {
+  margin: 4px 16px 12px;
+  background: var(--color-dark);
   border-radius: 20px;
-  flex-shrink: 0;
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: 600;
-  transition: background 0.15s, color 0.15s;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
-.balance-month-chip.active { background: var(--label-primary); color: #fff; }
-.balance-stats-row { justify-content: space-between; gap: 8px; padding: 8px 20px 20px; display: flex; }
-.balance-stat { flex-direction: column; flex: 1; align-items: center; gap: 3px; display: flex; }
-.balance-stat-label { letter-spacing: 0.5px; text-transform: uppercase; color: var(--label-tertiary); font-size: 11px; font-weight: 600; }
-.balance-stat-value { color: var(--label-primary); font-size: 17px; font-weight: 800; }
-.balance-stat--net .balance-stat-value { font-size: 18px; }
-.balance-stat-currency { color: var(--label-tertiary); font-size: 11px; font-weight: 600; }
-.income-val  { color: #34A853; }
-.expense-val { color: #EA4335; }
-.balance-chart-wrap { justify-content: space-around; align-items: flex-end; gap: 8px; padding: 0 16px 12px; display: flex; }
-.balance-week-col {
-  cursor: pointer;
+.balance-summary-item {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 0 4px;
+}
+.balance-summary-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--color-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.balance-summary-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.balance-summary-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin: 0;
+}
+.balance-summary-amount {
+  font-size: 17px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+  line-height: 1.2;
+}
+.balance-summary-cents {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.7;
+}
+.balance-summary-currency {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.4);
+}
+.balance-summary-sep {
+  width: 1px;
+  height: 48px;
+  background: rgba(255,255,255,0.1);
+  flex-shrink: 0;
+}
+
+/* ── Monthly bar chart (dark card) ── */
+.bal-chart-card {
+  margin: 0 16px 16px;
+  background: var(--color-dark);
+  border-radius: 20px;
+  padding: 20px 8px 10px;
+  overflow: hidden;
+}
+.bal-chart-area {
+  position: relative;
+  width: 100%;
+}
+
+/* Reference lines */
+.bal-ref-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed rgba(255,255,255,0.35);
+  pointer-events: none;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  transform: translateY(50%);
+}
+.bal-ref-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: #fff;
+  padding-right: 4px;
+  background: var(--color-dark);
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+/* Bars row fills chart area */
+.bal-bars-row {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+}
+.bal-month-btn {
+  flex: 1;
+  height: 100%;
   background: transparent;
   border: none;
-  border-radius: 14px;
-  flex-direction: column;
-  flex: 1;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 4px;
-  transition: background 0.15s;
+  cursor: pointer;
+  padding: 0 2px;
   display: flex;
+  align-items: flex-end;
 }
-.balance-week-col.selected { background: var(--fill-secondary); }
-.balance-week-col.selected .balance-week-label { color: var(--label-primary); font-weight: 700; }
-.balance-bar-container { width: 100%; position: relative; }
-.balance-bar { border-radius: 18px; transition: height 0.4s cubic-bezier(.34,1.56,.64,1); position: absolute; bottom: 0; left: 0; right: 0; }
-.balance-bar--income  { z-index: 1; background: #b3f0ce; }
-.balance-bar--expense { z-index: 2; background: #ffb3c8; }
-.balance-week-label { color: var(--label-tertiary); white-space: nowrap; font-size: 11px; font-weight: 600; }
-.balance-legend { justify-content: center; align-items: center; gap: 8px; padding: 16px 16px 8px; display: flex; }
-.balance-legend-dot { border-radius: 50%; flex-shrink: 0; width: 10px; height: 10px; display: inline-block; }
-.balance-legend-text { color: var(--label-secondary); margin-right: 8px; font-size: 13px; font-weight: 600; }
+.bal-bar-pair {
+  position: relative;
+  width: 100%;
+}
+.bal-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-radius: 12px 12px 0 0;
+  transition: height 0.4s cubic-bezier(.34,1.56,.64,1);
+}
+.bal-bar--income  { background: rgba(255,255,255,0.28); }
+.bal-bar--expense { background: #fff; z-index: 1; }
+
+/* Month labels */
+.bal-labels-row {
+  display: flex;
+  margin-top: 8px;
+}
+.bal-month-label {
+  flex: 1;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.bal-month-label.selected { color: #FEA503; font-weight: 700; }
+
+/* ── History ── */
 .balance-history { padding: 12px 0 0; }
-.balance-history-header { border-bottom: 1px solid var(--separator); align-items: baseline; gap: 8px; margin-bottom: 6px; padding: 4px 20px 10px; display: flex; }
-.balance-history-week { color: var(--label-primary); font-size: 15px; font-weight: 700; }
-.balance-history-range { color: var(--label-tertiary); text-transform: capitalize; font-size: 13px; font-weight: 500; }
 .balance-history-empty { text-align: center; color: var(--label-tertiary); padding: 28px 20px; font-size: 14px; }

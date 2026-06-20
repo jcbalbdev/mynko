@@ -7,7 +7,8 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import './HomeScreen.css';
 import { useHomeSheets } from '../hooks/useHomeSheets';
 import { useQuickAdd }   from '../hooks/useQuickAdd';
-import { User, Menu, Receipt, HandCoins, TrendingUp, Scale, ArrowLeftRight, ChevronLeft, ChevronRight, Wallet, X, CreditCard, Repeat, Search, Zap } from 'lucide-react';
+import { useMenuConfig } from '../hooks/useMenuConfig';
+import { Settings, Menu, Receipt, HandCoins, TrendingUp, Scale, ArrowLeftRight, ChevronLeft, ChevronRight, Wallet, X, CreditCard, Repeat, Search, Zap, ChevronDown, MapPin } from 'lucide-react';
 import BarChart               from './BarChart';
 import DebtListView          from './DebtListView';
 import IncomeListView        from './IncomeListView';
@@ -18,9 +19,11 @@ import AddDebtSheet          from './AddDebtSheet';
 import AddIncomeSheet        from './AddIncomeSheet';
 import AddExpenseSheet       from './AddExpenseSheet';
 import PeriodSheet           from './PeriodSheet';
+import LocationSheet        from './LocationSheet';
 import AddExchangeSheet      from './AddExchangeSheet';
 import AddAccountSheet       from './AddAccountSheet';
-import AccountDetailSheet    from './AccountDetailSheet';
+import AccountDetailSheet         from './AccountDetailSheet';
+import AccountTransactionsSheet   from './AccountTransactionsSheet';
 import TransferSheet         from './TransferSheet';
 import QuickAddModal         from './QuickAddModal';
 import TransactionRow        from './ui/TransactionRow';
@@ -29,6 +32,7 @@ import CategoryEditSheet     from './CategoryEditSheet';
 import ProfileSheet          from './ProfileSheet';
 import DateGroupHeader       from './ui/DateGroupHeader';
 import { TYPE_FILTERS, getCategoryById } from '../utils/categories';
+import { getCurrencyByCode } from '../utils/currencies';
 import { useSearchFilter } from '../hooks/useSearchFilter';
 import {
   applyFilters,
@@ -55,6 +59,11 @@ import RecurringListView         from './RecurringListView';
 import AddRecurringSheet         from './AddRecurringSheet';
 import AddSubscriptionSheet      from './AddSubscriptionSheet';
 import QuickAccessScreen         from './QuickAccessScreen';
+import BaseSheet                from './ui/BaseSheet';
+import BudgetQuickSheet         from './BudgetQuickSheet';
+
+const MONTHS_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const MONTHS_FULL  = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 
 
 const NAV_VIEWS = [
@@ -93,12 +102,16 @@ export default function HomeScreen({
   userCategories       = [],
   onCreateSubcategory,
   onDeleteSubcategory,
+  onCreateParentCategory,
+  onUpdateCategoryColor,
+  onUpdateSystemCategoryColor,
   onGoToAccounts,
   accounts             = [],
   onAddAccount,
   onUpdateAccount,
   onDeleteAccount,
   onTransfer,
+  transfers            = [],
   charges              = [],
   onAddCharge,
   onAddPayment,
@@ -107,6 +120,7 @@ export default function HomeScreen({
   recurring            = [],
   onAddRecurring,
   onConfirmRecurring,
+  onMarkRecurringDone,
   onUpdateRecurring,
   onDeleteRecurring,
   quickAccess          = [],
@@ -116,12 +130,18 @@ export default function HomeScreen({
   getLastExpense,
   uniqueDescriptions,
   onQuickRegister,
+  navigateTo           = null,
+  onNavigateDone,
+  budgets              = [],
+  onAddBudget,
+  onUpdateBudget,
+  onDeleteBudget,
 }) {
   /* ── Sheet & modal state (via hook) ── */
   const { sheets, actions } = useHomeSheets();
   const {
     showProfile, showDebtSheet, showIncomeSheet, showExchangeSheet,
-    showAddAccSheet, showTransferSheet, selectedAccount, editExp, editCat,
+    showAddAccSheet, showTransferSheet, transferFromAccountId, txSheetAccount, selectedAccount, editExp, editCat,
     showCreditChargeSheet, showCreditPaySheet, creditSheetAccountId,
     showRecurringSheet, showSubscriptionSheet,
   } = sheets;
@@ -139,34 +159,47 @@ export default function HomeScreen({
   // Wrap handleBarLongPress to pass the active view automatically
   const handleBarLongPress = (catId, rect, view) => _handleBarLongPress(catId, rect, view);
 
+  /* ── Menu config (order + visibility) ── */
+  const { config: menuConfig, toggleHidden: toggleMenuHidden, reorder: reorderMenu } = useMenuConfig();
+  const NAV_VIEWS_BASE = NAV_VIEWS.filter(Boolean);
+  const orderedNavViews = useMemo(() =>
+    menuConfig.order.map(id => NAV_VIEWS_BASE.find(v => v.id === id)).filter(Boolean),
+    [menuConfig.order] // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  const visibleNavViews = useMemo(() =>
+    orderedNavViews.filter(v => !menuConfig.hidden.includes(v.id)),
+    [orderedNavViews, menuConfig.hidden]
+  );
+  const hiddenNavViews = useMemo(() =>
+    orderedNavViews.filter(v => menuConfig.hidden.includes(v.id)),
+    [orderedNavViews, menuConfig.hidden]
+  );
+
   /* ── Other view state ── */
-  const [showMenu,     setShowMenu]     = useState(false);
-  const [activeView,   setActiveView]   = useState('gastos'); // gastos|deudas|ingresos|balance|cambio|cuentas
+  const [showMenu,       setShowMenu]       = useState(false);
+  const [showHiddenNav,  setShowHiddenNav]  = useState(false);
+  const [activeView,     setActiveView]     = useState('gastos');
+  const [recurringTitle, setRecurringTitle] = useState('Total de gastos recurrentes');
+
+  useEffect(() => {
+    if (navigateTo) {
+      setActiveView(navigateTo);
+      setShowMenu(false);
+      if (onNavigateDone) onNavigateDone();
+    }
+  }, [navigateTo]); // eslint-disable-line react-hooks/exhaustive-deps
   const [drillCategory, setDrillCategory] = useState(null);
-  const [balanceYear,  setBalanceYear]  = useState(new Date().getFullYear());
-  const [balanceMonth, setBalanceMonth] = useState(new Date().getMonth());
+  const [balanceYear,         setBalanceYear]         = useState(new Date().getFullYear());
+  const [balanceMonth,        setBalanceMonth]        = useState(new Date().getMonth());
+  const [showBalancePicker,   setShowBalancePicker]   = useState(false);
   const [stickyBars,   setStickyBars]   = useState(false);
   const scrollRef        = useRef(null);
   const menuRef          = useRef(null);
-  const locationMenuRef  = useRef(null);
   const barChartRef       = useRef(null);
   const incomeBarChartRef = useRef(null);
   const searchBarRef     = useRef(null);
-  const [showPeriodSheet,  setShowPeriodSheet]  = useState(false);
-  const [showLocationMenu, setShowLocationMenu] = useState(false);
-
-  /* Close location menu when clicking outside */
-  useEffect(() => {
-    const handler = (e) => {
-      if (showLocationMenu && !locationMenuRef.current?.contains(e.target)) setShowLocationMenu(false);
-    };
-    document.addEventListener('mousedown', handler);
-    document.addEventListener('touchstart', handler);
-    return () => {
-      document.removeEventListener('mousedown', handler);
-      document.removeEventListener('touchstart', handler);
-    };
-  }, [showLocationMenu]);
+  const [showPeriodSheet,    setShowPeriodSheet]    = useState(false);
+  const [showLocationSheet,  setShowLocationSheet]  = useState(false);
 
   /* Swipe right to exit drill-down */
   useSwipeBack(scrollRef, () => setDrillCategory(null), !!drillCategory);
@@ -250,7 +283,6 @@ export default function HomeScreen({
 
   const handleLocationChange = (loc) => {
     setLocationFilter(loc);
-    setShowLocationMenu(false);
   };
 
   /* ── Derived data for the Gastos view ── */
@@ -341,7 +373,10 @@ export default function HomeScreen({
   /* ── Balance net (for the header when activeView === 'balance') ── */
   const balanceNet = useMemo(() => {
     const curr       = currencyBalance;
-    const dateFilter = e => { const d = new Date(e.date); return d.getFullYear() === balanceYear && d.getMonth() === balanceMonth; };
+    const dateFilter = e => {
+      const d = new Date(e.date);
+      return d.getFullYear() === balanceYear && d.getMonth() === balanceMonth;
+    };
     const expOnly    = expenses.filter(e => e.type !== 'ingreso' && e.type !== 'cambio');
 
     const bInc = expenses
@@ -441,8 +476,8 @@ export default function HomeScreen({
             ].filter(Boolean).join(' ')}
           >
             {/* Profile btn — always visible */}
-            <button className="home-pill-profile-btn" onClick={actions.openProfile} id="btn-open-profile" aria-label="Mi perfil">
-              <User size={18} strokeWidth={2.5} />
+            <button className="home-pill-profile-btn" onClick={actions.openProfile} id="btn-open-profile" aria-label="Configuración">
+              <Settings size={18} strokeWidth={2.5} />
             </button>
 
             {/* Separator + search icon */}
@@ -490,7 +525,7 @@ export default function HomeScreen({
                   <span className="home-search-suggestion-dot" style={{ background: s.color }} />
                   <span className="home-search-suggestion-label">{s.label}</span>
                   <span className="home-search-suggestion-type">
-                    {s.type === 'category' ? 'Categoría' : s.type === 'subcategory' ? 'Subcategoría' : 'Descripción'}
+                    {s.type === 'category' ? 'Categoría' : s.type === 'subcategory' ? 'Subcategoría' : s.type === 'date' ? 'Fecha' : 'Descripción'}
                   </span>
                 </button>
               ))}
@@ -520,26 +555,27 @@ export default function HomeScreen({
           </button>
         ) : (
           <p className="home-total-label">
-            {activeView === 'deudas'      ? 'Por cobrar'
-             : activeView === 'ingresos'  ? 'Total de ingresos'
-             : activeView === 'balance'   ? 'Balance neto'
-             : activeView === 'cambio'    ? 'Cambio de moneda'
-             : activeView === 'cuentas'   ? (activeAccount?.name ?? 'Mis cuentas')
-             : activeView === 'credito'   ? 'Deuda total'
-             : activeView === 'recurrentes' ? 'Recurrentes'
+            {activeView === 'deudas'        ? 'Por cobrar'
+             : activeView === 'ingresos'    ? 'Total de ingresos'
+             : activeView === 'balance'     ? 'Balance neto'
+             : activeView === 'cambio'      ? 'Cambio de moneda'
+             : activeView === 'cuentas'     ? (activeAccount?.name ?? 'Mis cuentas')
+             : activeView === 'credito'     ? 'Deuda total'
+             : activeView === 'recurrentes' ? recurringTitle
+             : activeView === 'rapido'      ? 'Acceso Rápido'
              : 'Total de gastos'}
           </p>
         )}
 
-        {/* Big amount — hidden for cambio and recurrentes; for cuentas shows active account balance */}
-        {activeView !== 'cambio' && activeView !== 'recurrentes' && (
+        {/* Big amount — hidden for cambio, recurrentes and rapido */}
+        {activeView !== 'cambio' && activeView !== 'recurrentes' && activeView !== 'rapido' && (
           <div className="home-amount-row">
             {activeView === 'cuentas' ? (
               <>
                 {accSign && <span className="home-amount-sign">{accSign}</span>}
                 <span className="home-amount-int">{accIntPart}</span>
                 <span className="home-amount-cents">
-                  {accCentsPart} <span style={{ fontSize: '0.55em', letterSpacing: 1 }}>{activeAccCurrency}</span>
+                  {accCentsPart} <span style={{ fontSize: '0.55em', letterSpacing: 1 }}>{getCurrencyByCode(activeAccCurrency).symbol}</span>
                 </span>
               </>
             ) : (
@@ -549,17 +585,19 @@ export default function HomeScreen({
                 <span className="home-amount-cents">
                   {centsPart}{' '}
                   <span
-                    className="home-amount-currency"
+                    className={`home-amount-currency${usedCurrencies.length > 1 ? ' home-amount-currency--clickable' : ''}`}
                     onClick={() => cycleCurrency(activeView === 'balance')}
                     style={{ cursor: usedCurrencies.length > 1 ? 'pointer' : 'default' }}
                   >
-                    {activeView === 'balance' ? currencyBalance : currencyFilter}
-                    <span className="home-amount-currency-arrows">
-                      <svg width="10" height="14" viewBox="0 0 10 14" fill="none">
-                        <path d="M5 1.5L8 5H2L5 1.5Z" fill="currentColor" opacity="0.7"/>
-                        <path d="M5 12.5L2 9H8L5 12.5Z" fill="currentColor" opacity="0.7"/>
-                      </svg>
-                    </span>
+                    {(() => { const c = activeView === 'balance' ? currencyBalance : currencyFilter; return c === 'all' ? c : getCurrencyByCode(c).symbol; })()}
+                    {usedCurrencies.length > 1 && (
+                      <span className="home-amount-currency-arrows">
+                        <svg width="10" height="14" viewBox="0 0 10 14" fill="none">
+                          <path d="M5 1.5L8 5H2L5 1.5Z" fill="currentColor"/>
+                          <path d="M5 12.5L2 9H8L5 12.5Z" fill="currentColor"/>
+                        </svg>
+                      </span>
+                    )}
                   </span>
                 </span>
               </>
@@ -567,75 +605,100 @@ export default function HomeScreen({
           </div>
         )}
 
-        {/* Filter sentence — hidden in cambio, cuentas, balance, recurrentes */}
-        {activeView !== 'cambio' && activeView !== 'cuentas' && activeView !== 'balance' && activeView !== 'recurrentes' && (
+        {/* Filter sentence — hidden in cambio, cuentas, balance, recurrentes, rapido */}
+        {activeView !== 'cambio' && activeView !== 'cuentas' && activeView !== 'balance' && activeView !== 'recurrentes' && activeView !== 'rapido' && (
           <div className="home-filter-sentence">
-            <>
-              <span className="home-filter-word">En</span>
-              <button className="home-filter-pill" onClick={() => setShowPeriodSheet(true)} id="chip-period">
-                {periodLabel}
-              </button>
-              {usedLocations.length > 1 && (
-                <div className="home-filter-location-wrap" ref={locationMenuRef}>
-                  <span className="home-filter-word">en</span>
+            {(() => {
+              const dateTags = [...searchTags.filter(t => t.type === 'date')].sort((a, b) => a.id.localeCompare(b.id));
+              const isRange  = dateTags.length === 2;
+              const dateLabel = isRange
+                ? dateTags[0].id.slice(0, 7) === dateTags[1].id.slice(0, 7)
+                  ? `${dateTags[0].label.split(' de ')[0]} al ${dateTags[1].label}`
+                  : `${dateTags[0].label} al ${dateTags[1].label}`
+                : dateTags[0]?.label ?? null;
+              const hasDates  = dateTags.length > 0;
+              const introWord = !hasDates ? 'En' : isRange ? 'Del' : 'El';
+              const clearDates = () => dateTags.forEach(t => removeTag(t.id, 'date'));
+              return (
+                <>
+                  <span className="home-filter-word">{introWord}</span>
                   <button
                     className="home-filter-pill"
-                    onClick={() => setShowLocationMenu(v => !v)}
-                    id="chip-location"
+                    onClick={hasDates ? undefined : () => setShowPeriodSheet(true)}
+                    id="chip-period"
+                    style={hasDates ? { cursor: 'default' } : undefined}
                   >
-                    {locationFilter === 'Todos' ? 'Lugar' : locationFilter}
-                    <ChevronRight size={11} strokeWidth={3} style={{ opacity: 0.5, flexShrink: 0, transform: showLocationMenu ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} />
+                    {hasDates ? (
+                      <>
+                        {dateLabel}
+                        <span
+                          className="home-filter-pill-clear"
+                          role="button"
+                          aria-label="Quitar filtro de fecha"
+                          onClick={e => { e.stopPropagation(); clearDates(); }}
+                        >
+                          <X size={10} strokeWidth={3} />
+                        </span>
+                      </>
+                    ) : periodLabel}
                   </button>
-                    {showLocationMenu && (
-                      <div className="home-menu-dropdown" style={{ top: 'calc(100% + 4px)', left: 0, right: 'auto', minWidth: 120, whiteSpace: 'nowrap' }}>
-                        {usedLocations.map(loc => (
-                          <button
-                            key={loc}
-                            className={`home-menu-item${locationFilter === loc ? ' active' : ''}`}
-                            onClick={() => handleLocationChange(loc)}
-                            style={{ justifyContent: 'center' }}
-                          >
-                            {loc}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-            </>
+                  {usedLocations.length > 1 && (
+                    <>
+                      <span className="home-filter-word">en</span>
+                      <button
+                        className="home-filter-pill"
+                        onClick={() => setShowLocationSheet(true)}
+                        id="chip-location"
+                      >
+                        {locationFilter === 'Todos' ? (
+                          <MapPin size={13} strokeWidth={2.5} />
+                        ) : (
+                          <>
+                            {locationFilter}
+                            <span
+                              className="home-filter-pill-clear"
+                              role="button"
+                              aria-label="Quitar filtro de ubicación"
+                              onClick={e => { e.stopPropagation(); setLocationFilter('Todos'); }}
+                            >
+                              <X size={10} strokeWidth={3} />
+                            </span>
+                          </>
+                        )}
+                      </button>
+                    </>
+                  )}
+                </>
+              );
+            })()}
           </div>
         )}
 
-        {/* Search tag chips */}
-        {searchTags.length > 0 && ['gastos', 'ingresos', 'deudas'].includes(activeView) && (
+        {/* Balance filter pill — fixed in header */}
+        {activeView === 'balance' && (
+          <div className="home-filter-sentence">
+            <span className="home-filter-word">En</span>
+            <button className="home-filter-pill" onClick={() => setShowBalancePicker(true)}>
+              {balanceYear}
+            </button>
+          </div>
+        )}
+
+        {/* Search tag chips — date tags now live in the period pill */}
+        {searchTags.some(t => t.type !== 'date') && ['gastos', 'ingresos', 'deudas'].includes(activeView) && (
           <div className="home-search-tags-row">
-            {(() => {
-              const sorted  = [...searchTags.filter(t => t.type === 'date')].sort((a, b) => a.id.localeCompare(b.id));
-              const others  = searchTags.filter(t => t.type !== 'date');
-              const isRange = sorted.length === 2;
-              const rangeLabel = isRange
-                ? sorted[0].id.slice(0, 7) === sorted[1].id.slice(0, 7)
-                  ? `Del ${sorted[0].label.split(' de ')[0]} al ${sorted[1].label}`
-                  : `Del ${sorted[0].label} al ${sorted[1].label}`
-                : null;
-
-              const pills = isRange
-                ? [{ ...sorted[0], label: rangeLabel, _rangeEnd: sorted[1] }, ...others]
-                : [...sorted, ...others];
-
-              return pills.map(tag => (
-                <span key={tag.id + tag.type} className="home-search-tag" style={{ background: tag.color }}>
-                  <span className="home-search-tag-label">{tag.label}</span>
-                  <button
-                    className="home-search-tag-remove"
-                    onClick={() => { removeTag(tag.id, tag.type); if (tag._rangeEnd) removeTag(tag._rangeEnd.id, 'date'); }}
-                    aria-label={`Eliminar filtro ${tag.label}`}
-                  >
-                    <X size={10} strokeWidth={3} />
-                  </button>
-                </span>
-              ));
-            })()}
+            {searchTags.filter(t => t.type !== 'date').map(tag => (
+              <span key={tag.id + tag.type} className="home-search-tag" style={{ background: tag.color }}>
+                <span className="home-search-tag-label">{tag.label}</span>
+                <button
+                  className="home-search-tag-remove"
+                  onClick={() => removeTag(tag.id, tag.type)}
+                  aria-label={`Eliminar filtro ${tag.label}`}
+                >
+                  <X size={10} strokeWidth={3} />
+                </button>
+              </span>
+            ))}
           </div>
         )}
 
@@ -647,7 +710,7 @@ export default function HomeScreen({
               : (drillCategory ? incomeDrillChartData : incomeChartData)
             }
             onPress={drillCategory ? null : setDrillCategory}
-            onLongPress={drillCategory ? null : (catId, rect) => handleBarLongPress(catId, rect, activeView)}
+            onLongPress={(catId, rect) => handleBarLongPress(catId, rect, activeView)}
             onHoverOption={handleHoverOption}
             onLongPressRelease={handleLongPressRelease}
           />
@@ -666,8 +729,9 @@ export default function HomeScreen({
             <div className="barchart-section" ref={barChartRef}>
               <BarChart
                 expenses={drillCategory ? drillChartData : chartData}
+                budgets={budgets}
                 onBarPress={drillCategory ? null : setDrillCategory}
-                onBarLongPress={drillCategory ? null : (catId, rect) => handleBarLongPress(catId, rect, 'gastos')}
+                onBarLongPress={(catId, rect) => handleBarLongPress(catId, rect, 'gastos')}
                 onHoverOption={handleHoverOption}
                 onLongPressRelease={handleLongPressRelease}
                 emptyLabel="gastos"
@@ -681,9 +745,14 @@ export default function HomeScreen({
                   return (
                     <div key={dateKey} className="exp-date-group">
                       <DateGroupHeader label={dateKey} total={dayTotal} currency={currencyFilter} />
-                      {dayExpenses.map(exp => (
-                        <TransactionRow key={exp.id} record={exp} onPress={actions.openExpEdit} />
-                      ))}
+                      <div className="exp-day-block">
+                        {dayExpenses.map((exp, idx) => (
+                          <React.Fragment key={exp.id}>
+                            {idx > 0 && <div className="exp-day-divider" />}
+                            <TransactionRow record={exp} onPress={actions.openExpEdit} />
+                          </React.Fragment>
+                        ))}
+                      </div>
                     </div>
                   );
                 })}
@@ -725,7 +794,8 @@ export default function HomeScreen({
             accounts={sortedAccounts}
             expenses={expenses}
             onOpenAddAccount={actions.openAddAccSheet}
-            onCardPress={actions.selectAccount}
+            onCardPress={actions.openTxSheet}
+            onInfo={actions.selectAccount}
             onTransfer={actions.openTransferSheet}
             onActiveChange={(idx) => setActiveAccountIdx(idx)}
           />
@@ -733,12 +803,14 @@ export default function HomeScreen({
           <RecurringListView
             recurring={recurring}
             onConfirmRecurring={onConfirmRecurring}
+            onMarkRecurringDone={onMarkRecurringDone}
             onUpdateRecurring={onUpdateRecurring}
             onDeleteRecurring={onDeleteRecurring}
             onAddRecurring={actions.openRecurringSheet}
             onAddSubscription={actions.openSubscriptionSheet}
             userCategories={userCategories}
             accounts={accounts}
+            onTitleChange={setRecurringTitle}
           />
         ) : activeView === 'rapido' ? (
           <QuickAccessScreen
@@ -754,15 +826,16 @@ export default function HomeScreen({
           <BalanceView
             expenses={expenses}
             year={balanceYear}
-            month={balanceMonth}
             currency={currencyBalance}
-            onYearChange={setBalanceYear}
-            onMonthChange={setBalanceMonth}
+            onMonthSelect={setBalanceMonth}
           />
         )}
       </div>
 
       {/* FAB — hidden in balance, cuentas, credito and recurrentes (which has its own FAB) */}
+      {activeView !== 'balance' && activeView !== 'cuentas' && activeView !== 'credito' && activeView !== 'recurrentes' && activeView !== 'rapido' && (
+        <div className="fab-fade" />
+      )}
       {activeView !== 'balance' && activeView !== 'cuentas' && activeView !== 'credito' && activeView !== 'recurrentes' && activeView !== 'rapido' && (
         <button
           className="add-pill-btn"
@@ -793,8 +866,20 @@ export default function HomeScreen({
           userCategories={userCategories}
           onCreateSubcategory={onCreateSubcategory}
           onDeleteSubcategory={onDeleteSubcategory}
+          onCreateParentCategory={onCreateParentCategory}
+          onUpdateCategoryColor={onUpdateCategoryColor}
+          onUpdateSystemCategoryColor={onUpdateSystemCategoryColor}
           yapePermission={yapePermission}
           onRequestYapePermission={onRequestYapePermission}
+          navViews={NAV_VIEWS_BASE}
+          menuConfig={menuConfig}
+          onMenuToggleHidden={toggleMenuHidden}
+          onMenuReorder={reorderMenu}
+          budgets={budgets}
+          onAddBudget={onAddBudget}
+          onUpdateBudget={onUpdateBudget}
+          onDeleteBudget={onDeleteBudget}
+          expenses={expenses}
         />
       )}
       {editCat && (
@@ -851,6 +936,15 @@ export default function HomeScreen({
           onClose={actions.closeAddAccSheet}
         />
       )}
+      {txSheetAccount && (
+        <AccountTransactionsSheet
+          account={txSheetAccount}
+          expenses={expenses}
+          transfers={transfers}
+          accounts={accounts}
+          onClose={actions.closeTxSheet}
+        />
+      )}
       {selectedAccount && (
         <AccountDetailSheet
           account={selectedAccount}
@@ -863,6 +957,8 @@ export default function HomeScreen({
       {showTransferSheet && (
         <TransferSheet
           accounts={accounts}
+          expenses={expenses}
+          fromAccountId={transferFromAccountId}
           onTransfer={async (data) => { await onTransfer?.(data); actions.closeTransferSheet(); }}
           onClose={actions.closeTransferSheet}
         />
@@ -881,6 +977,14 @@ export default function HomeScreen({
           periodMode={periodMode}
           onSave={handlePeriodSave}
           onClose={() => setShowPeriodSheet(false)}
+        />
+      )}
+      {showLocationSheet && (
+        <LocationSheet
+          locations={usedLocations}
+          selected={locationFilter}
+          onSelect={handleLocationChange}
+          onClose={() => setShowLocationSheet(false)}
         />
       )}
       {showRecurringSheet && (
@@ -904,25 +1008,33 @@ export default function HomeScreen({
         />
       )}
 
+      {/* ── Balance year picker sheet ── */}
+      {showBalancePicker && (
+        <BaseSheet title="Selecciona un año" onClose={() => setShowBalancePicker(false)}>
+          <div className="balance-picker-year-row">
+            <button className="balance-nav-btn" onClick={() => setBalanceYear(y => y - 1)}><ChevronLeft size={16} /></button>
+            <span className="balance-year-label">{balanceYear}</span>
+            <button className="balance-nav-btn" onClick={() => setBalanceYear(y => y + 1)}><ChevronRight size={16} /></button>
+          </div>
+        </BaseSheet>
+      )}
+
       {/* ── Nav Sheet ── */}
       {showMenu && (
         <>
-          <div className="sheet-overlay" onClick={() => setShowMenu(false)} />
+          <div className="sheet-overlay" onClick={() => { setShowMenu(false); setShowHiddenNav(false); }} />
           <div className="sheet home-nav-sheet" role="menu">
             <div className="sheet-handle" />
             <div className="sheet-header">
               <span className="sheet-title">Navegación</span>
-              <button className="sheet-close" onClick={() => setShowMenu(false)} aria-label="Cerrar menú">
+              <button className="sheet-close" onClick={() => { setShowMenu(false); setShowHiddenNav(false); }} aria-label="Cerrar menú">
                 <X size={16} strokeWidth={2.5} />
               </button>
             </div>
             <div className="home-nav-sheet-body">
-              {NAV_VIEWS.map((item, i) =>
-                item === null ? (
-                  <div key={`div-${i}`} className="home-menu-divider" />
-                ) : (
+              {visibleNavViews.map((item, i) => (
+                <React.Fragment key={item.id}>
                   <button
-                    key={item.id}
                     className={`home-menu-item home-nav-sheet-item${activeView === item.id ? ' active' : ''}`}
                     role="menuitem"
                     id={`menu-item-${item.id}`}
@@ -930,6 +1042,7 @@ export default function HomeScreen({
                       setActiveView(item.id);
                       setDrillCategory(null);
                       setShowMenu(false);
+                      setShowHiddenNav(false);
                       if (item.id === 'cuentas') onGoToAccounts?.();
                     }}
                   >
@@ -939,11 +1052,62 @@ export default function HomeScreen({
                       <span className="home-nav-sheet-desc">{item.desc}</span>
                     </span>
                   </button>
-                )
+                </React.Fragment>
+              ))}
+
+              {hiddenNavViews.length > 0 && (
+                <>
+                  <button
+                    className="home-nav-more-btn"
+                    onClick={() => setShowHiddenNav(v => !v)}
+                  >
+                    <ChevronDown
+                      size={14}
+                      strokeWidth={2.5}
+                      className={`home-nav-more-chevron${showHiddenNav ? ' open' : ''}`}
+                    />
+                    <span>{showHiddenNav ? 'Menos secciones' : 'Más secciones'}</span>
+                  </button>
+                  {showHiddenNav && hiddenNavViews.map((item) => (
+                    <React.Fragment key={item.id}>
+                      <button
+                        className={`home-menu-item home-nav-sheet-item home-nav-hidden-item${activeView === item.id ? ' active' : ''}`}
+                        role="menuitem"
+                        id={`menu-item-${item.id}`}
+                        onClick={() => {
+                          setActiveView(item.id);
+                          setDrillCategory(null);
+                          setShowMenu(false);
+                          setShowHiddenNav(false);
+                          if (item.id === 'cuentas') onGoToAccounts?.();
+                        }}
+                      >
+                        <item.Icon size={20} strokeWidth={2} className="home-nav-sheet-icon" />
+                        <span className="home-nav-sheet-text">
+                          <span className="home-nav-sheet-label">{item.label}</span>
+                          <span className="home-nav-sheet-desc">{item.desc}</span>
+                        </span>
+                      </button>
+                    </React.Fragment>
+                  ))}
+                </>
               )}
             </div>
           </div>
         </>
+      )}
+      {quickAddSheet?.type === 'budget' && (
+        <BudgetQuickSheet
+          categoryId={quickAddSheet.parentCatId}
+          budgets={budgets}
+          userCategories={userCategories}
+          expenses={expenses}
+          defaultCurrency={defaultCurrency}
+          onAdd={onAddBudget}
+          onUpdate={onUpdateBudget}
+          onDelete={onDeleteBudget}
+          onClose={clearQuickAddSheet}
+        />
       )}
       {quickAddSheet?.view === 'gastos' && quickAddSheet.subcatId === CREDIT_PAYMENT_CATEGORY.id && (
         <AddCreditPaymentSheet

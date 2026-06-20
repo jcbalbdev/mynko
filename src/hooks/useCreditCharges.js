@@ -1,10 +1,7 @@
-/**
- * useCreditCharges.js
- * Supabase-backed CRUD for credit card charges (consumos).
- * Follows the same pattern as useTransfers.js.
- */
-import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { useSupabaseCollection } from './useSupabaseCollection';
+
+const ORDER_BY = { column: 'date', ascending: false };
 
 function rowToCharge(row) {
   return {
@@ -21,20 +18,8 @@ function rowToCharge(row) {
 }
 
 export function useCreditCharges(userId) {
-  const [charges, setCharges] = useState([]);
-
-  const fetchCharges = useCallback(async () => {
-    if (!userId) { setCharges([]); return; }
-    const { data, error } = await supabase
-      .from('credit_charges')
-      .select('*')
-      .eq('user_id', userId)
-      .order('date', { ascending: false });
-    if (!error) setCharges(data.map(rowToCharge));
-    else console.error('[useCreditCharges] fetch error:', error.message);
-  }, [userId]);
-
-  useEffect(() => { fetchCharges(); }, [fetchCharges]);
+  const { items: charges, setItems: setCharges, refetch } =
+    useSupabaseCollection({ userId, table: 'credit_charges', rowToItem: rowToCharge, orderBy: ORDER_BY });
 
   const addCharge = async (charge) => {
     const instAmt = charge.installments > 1
@@ -68,9 +53,9 @@ export function useCreditCharges(userId) {
     const { error } = await supabase.from('credit_charges').delete().eq('id', id);
     if (error) {
       console.error('[useCreditCharges] delete error:', error.message);
-      fetchCharges();
+      refetch();
     }
   };
 
-  return { charges, addCharge, deleteCharge, refetch: fetchCharges };
+  return { charges, addCharge, deleteCharge, refetch };
 }

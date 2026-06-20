@@ -4,6 +4,7 @@
  * Shows a numeric input with the currency code as suffix.
  */
 import React from 'react';
+import { getCurrencyByCode } from '../../utils/currencies';
 
 /**
  * @param {string}   value      - Current string value
@@ -26,6 +27,7 @@ const AmountInput = React.forwardRef(function AmountInput(
 
   return (
     <div className="amount-input-wrap">
+      <span className="amount-suffix">{getCurrencyByCode(currency).symbol}</span>
       <input
         ref={ref}
         id={id}
@@ -39,8 +41,8 @@ const AmountInput = React.forwardRef(function AmountInput(
         step="0.01"
         autoFocus={autoFocus}
         aria-label="Monto"
+        style={{ width: `${Math.max((value || '0').length, 1) * 32 + 8}px` }}
       />
-      <span className="amount-suffix">{currency}</span>
     </div>
   );
 });
