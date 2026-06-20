@@ -19,7 +19,7 @@ export default defineConfig({
       manifest: {
         name: 'Mynko',
         short_name: 'Mynko',
-        description: 'Registra y controla tus gastos, ingresos y cambios de moneda.',
+        description: 'Finanzas que se adaptan a ti.',
         theme_color: '#F2F2F7',
         background_color: '#F2F2F7',
         display: 'standalone',
