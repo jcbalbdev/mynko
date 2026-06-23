@@ -8,7 +8,8 @@ import './AccountDetailSheet.css';
 import BaseSheet      from './ui/BaseSheet';
 import FormSection    from './ui/FormSection';
 import { getCurrencyByCode } from '../utils/currencies';
-import { getAccountTypeColor, getAccountTypeLabel, computeAccountBalance, CREDIT_COLOR } from '../utils/accounts';
+import { getAccountTypeColor, getAccountTypeLabel, computeAccountBalance, computeCreditDebt, CREDIT_COLOR } from '../utils/accounts';
+import { CREDIT_PAYMENT_CATEGORY } from '../utils/categories';
 
 const TYPE_ICONS = {
   efectivo: Banknote,
@@ -17,7 +18,7 @@ const TYPE_ICONS = {
 };
 
 
-export default function AccountDetailSheet({ account, expenses = [], onUpdate, onDelete, onClose }) {
+export default function AccountDetailSheet({ account, expenses = [], charges = [], onUpdate, onDelete, onClose }) {
   const [name,         setName]         = useState(account.name);
   const [type,         setType]         = useState(account.type);
 const [balanceInput, setBalanceInput] = useState(account.balance.toString());
@@ -36,8 +37,9 @@ const [balanceInput, setBalanceInput] = useState(account.balance.toString());
   const cur          = getCurrencyByCode(account.currency);
   const computedBal  = computeAccountBalance(account, expenses);
 
-  // Credit-specific computed values
-  const currentDebt  = account.isCredit ? Math.max(0, -computedBal) : 0;
+  // Credit-specific computed values — use same logic as CreditView
+  const creditPayments = expenses.filter(e => e.category === CREDIT_PAYMENT_CATEGORY.id);
+  const currentDebt  = account.isCredit ? computeCreditDebt(account, charges, creditPayments) : 0;
   const creditLimitN = account.creditLimit ?? 0;
   const available    = Math.max(0, creditLimitN - currentDebt);
   const debtRatio    = creditLimitN > 0 ? Math.min(currentDebt / creditLimitN, 1) : 0;
@@ -98,9 +100,9 @@ const [balanceInput, setBalanceInput] = useState(account.balance.toString());
       {/* ── Balance hero ── */}
       {account.isCredit ? (
         <div className="account-detail-balance-hero">
-          <span className="account-detail-hero-label">Deuda actual</span>
+          <span className="account-detail-hero-label">Disponible</span>
           <span className="account-detail-hero-value">
-            {cur.symbol} {currentDebt.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {cur.symbol} {available.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
           {creditLimitN > 0 && (
             <>
@@ -108,7 +110,7 @@ const [balanceInput, setBalanceInput] = useState(account.balance.toString());
                 <div className="credit-progress-fill" style={{ width: `${debtRatio * 100}%` }} />
               </div>
               <span className="credit-available-text">
-                Disponible: {cur.symbol} {available.toLocaleString('es-MX', { minimumFractionDigits: 2 })} de {cur.symbol} {creditLimitN.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                Deuda: {cur.symbol} {currentDebt.toLocaleString('es-MX', { minimumFractionDigits: 2 })} de {cur.symbol} {creditLimitN.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
               </span>
             </>
           )}

@@ -412,8 +412,14 @@ export default function HomeScreen({
   const activeAccount = sortedAccounts[activeAccountIdx] ?? null;
   const activeAccBalance = useMemo(() => {
     if (!activeAccount) return 0;
+    if (activeAccount.isCredit) {
+      const creditPayments = expenses.filter(e => e.category === CREDIT_PAYMENT_CATEGORY.id);
+      const debt  = computeCreditDebt(activeAccount, charges, creditPayments);
+      const limit = activeAccount.creditLimit ?? 0;
+      return limit > 0 ? limit - debt : -debt;
+    }
     return computeAccountBalance(activeAccount, expenses);
-  }, [activeAccount, expenses]);
+  }, [activeAccount, expenses, charges]);
   const activeAccCurrency = activeAccount?.currency ?? 'PEN';
   const animatedAccBalance = useAnimatedNumber(Math.abs(activeAccBalance));
   const accIntPart   = Math.floor(animatedAccBalance).toLocaleString('es-MX');
@@ -577,6 +583,9 @@ export default function HomeScreen({
                 <span className="home-amount-cents">
                   {accCentsPart} <span style={{ fontSize: '0.55em', letterSpacing: 1 }}>{getCurrencyByCode(activeAccCurrency).symbol}</span>
                 </span>
+                {activeAccount?.isCredit && (
+                  <span style={{ fontSize: '0.32em', color: 'rgba(255,255,255,0.6)', letterSpacing: 1, alignSelf: 'flex-end', marginBottom: '0.4em', marginLeft: 4 }}>disponible</span>
+                )}
               </>
             ) : (
               <>
@@ -949,6 +958,7 @@ export default function HomeScreen({
         <AccountDetailSheet
           account={selectedAccount}
           expenses={expenses}
+          charges={charges}
           onUpdate={onUpdateAccount}
           onDelete={async (id) => { await onDeleteAccount?.(id); actions.clearAccount(); }}
           onClose={actions.clearAccount}
