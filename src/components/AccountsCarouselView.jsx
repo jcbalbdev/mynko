@@ -12,8 +12,8 @@ const T = {
 };
 
 const SLOT_X   = 48;   /* peek = 48 - 318×0.1 = 16px uniform */
-const FRICTION = 0.93;   /* más inercia → desliza más lejos antes de frenar */
-const SPRING   = 0.10;   /* más lento al encajar → suave como Instagram      */
+const FRICTION = 0.97;   /* más inercia → desliza más lejos antes de frenar */
+const SPRING   = 0.06;   /* más lento al encajar → suave como Instagram      */
 const ELASTIC  = 0.10;
 
 export default function AccountsCarouselView({ accounts=[], expenses=[], onOpenAddAccount, onCardPress, onInfo, onTransfer, onActiveChange }) {
