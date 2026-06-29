@@ -264,6 +264,17 @@
   background: var(--fill-primary);
   margin: 0 16px;
 }
+.edit-date-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--label-primary);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+  font-family: inherit;
+  cursor: pointer;
+}
 
 /* "Sin especificar" pill para Lugar vacío */
 .edit-no-location-pill {

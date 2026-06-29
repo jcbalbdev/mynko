@@ -51,6 +51,16 @@ export default function ExpenseEditSheet({
   const [sharedPaid,  setSharedPaid]  = useState(expense.sharedPaid ?? false);
   const [confirmDel,  setConfirmDel]  = useState(false);
 
+  // Editable date — keep time from original, only change the date part
+  const originalDate = new Date(expense.date);
+  const toInputValue = (d) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+  const [dateInput, setDateInput] = useState(toInputValue(originalDate));
+
   const isShared = expense.type === 'compartido';
   const debtor   = expense.sharedWith?.trim();
   const owes     = expense.sharedOwes ?? 0;
@@ -75,11 +85,18 @@ export default function ExpenseEditSheet({
   const handleSave = async () => {
     const parsed = parseFloat(amount);
     if (isNaN(parsed) || parsed <= 0) return;
+
+    // Rebuild date preserving original time but with the new date part
+    const [y, m, d] = dateInput.split('-').map(Number);
+    const newDate = new Date(originalDate);
+    newDate.setFullYear(y, m - 1, d);
+
     await onUpdate?.(expense.id, {
       amount:      parsed,
       category,
       description: description.trim(),
       location:    location.trim() || null,
+      date:        newDate.toISOString(),
     });
     onClose();
   };
@@ -145,7 +162,13 @@ export default function ExpenseEditSheet({
       <div className="edit-info-card">
         <div className="edit-info-row">
           <span className="edit-info-label">Fecha</span>
-          <span className="edit-info-value" style={{ textTransform: 'capitalize' }}>{dateStr}</span>
+          <input
+            className="edit-date-input"
+            type="date"
+            value={dateInput}
+            onChange={e => setDateInput(e.target.value)}
+            id="edit-date-field"
+          />
         </div>
         <div className="edit-info-divider" />
         <div className="edit-info-row">
