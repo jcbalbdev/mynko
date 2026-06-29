@@ -177,6 +177,7 @@ export function useExpenses(userId) {
     if (fields.description !== undefined) payload.description = fields.description;
     if (fields.category    !== undefined) payload.category    = fields.category;
     if (fields.location    !== undefined) payload.location    = fields.location?.trim() || null;
+    if (fields.date        !== undefined) payload.date        = fields.date;
 
     // Optimistic update
     setExpenses(prev => prev.map(e => e.id === id ? { ...e, ...fields } : e));
