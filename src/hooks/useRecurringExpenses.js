@@ -252,27 +252,32 @@ export function useRecurringExpenses(userId) {
 
     for (const rec of due) {
       try {
-        // Check if a matching expense already exists for this due date to avoid duplicates
-        const dueDateStr = rec.nextDueDate; // 'YYYY-MM-DD'
+        // Build the expense date using local noon to avoid UTC offset shifting the display day
+        const [y, m, d] = rec.nextDueDate.split('-').map(Number);
+        const expenseDate = new Date(y, m - 1, d, 12, 0, 0);
+
+        // Widen dedup window ±1 day to cover any UTC/local timezone difference
+        const winStart = new Date(y, m - 1, d - 1, 0, 0, 0).toISOString();
+        const winEnd   = new Date(y, m - 1, d + 1, 23, 59, 59).toISOString();
+
         const { data: existing } = await supabase
           .from('expenses')
           .select('id')
           .eq('user_id', userId)
           .eq('description', rec.description)
           .eq('amount', rec.amount)
-          .gte('date', dueDateStr + 'T00:00:00')
-          .lte('date', dueDateStr + 'T23:59:59')
+          .gte('date', winStart)
+          .lte('date', winEnd)
           .limit(1);
 
-        if (existing && existing.length > 0) {
-          // Already registered — just advance nextDueDate without creating a duplicate
-          const nextDue    = computeNextDueDate({
+        const advanceNextDue = async () => {
+          const nextDue = computeNextDueDate({
             frequency:    rec.frequency,
             days_of_week: rec.daysOfWeek,
             day_of_month: rec.dayOfMonth,
             yearly_day:   rec.yearlyDay,
             yearly_month: rec.yearlyMonth,
-          }, new Date(rec.nextDueDate));
+          }, new Date(y, m - 1, d));
           const nextDueStr = toDateString(nextDue);
           setRecurring(prev => prev.map(r =>
             r.id === rec.id ? { ...r, nextDueDate: nextDueStr } : r
@@ -281,6 +286,10 @@ export function useRecurringExpenses(userId) {
             next_due_date: nextDueStr,
             updated_at:    new Date().toISOString(),
           }).eq('id', rec.id);
+        };
+
+        if (existing && existing.length > 0) {
+          await advanceNextDue();
           continue;
         }
 
@@ -292,7 +301,7 @@ export function useRecurringExpenses(userId) {
           color:       rec.color,
           type:        'personal',
           currency:    rec.currency,
-          date:        new Date(rec.nextDueDate),
+          date:        expenseDate,
           accountId:   rec.accountId,
         });
 
@@ -302,7 +311,7 @@ export function useRecurringExpenses(userId) {
           day_of_month: rec.dayOfMonth,
           yearly_day:   rec.yearlyDay,
           yearly_month: rec.yearlyMonth,
-        }, new Date(rec.nextDueDate));
+        }, new Date(y, m - 1, d));
         const nextDueStr  = toDateString(nextDue);
         const triggeredAt = new Date().toISOString();
 
