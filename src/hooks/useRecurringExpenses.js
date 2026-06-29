@@ -313,7 +313,7 @@ export function useRecurringExpenses(userId) {
           yearly_month: rec.yearlyMonth,
         }, new Date(y, m - 1, d));
         const nextDueStr  = toDateString(nextDue);
-        const triggeredAt = new Date().toISOString();
+        const triggeredAt = expenseDate.toISOString(); // use actual charge date, not processing time
 
         setRecurring(prev => prev.map(r =>
           r.id === rec.id ? { ...r, nextDueDate: nextDueStr, lastTriggeredAt: triggeredAt } : r
