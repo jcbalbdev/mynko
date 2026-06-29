@@ -8,6 +8,7 @@ function rowToCharge(row) {
     id:                row.id,
     accountId:         row.account_id,
     description:       row.description ?? '',
+    category:          row.category    ?? 'other',
     amount:            Number(row.amount),
     currency:          row.currency ?? 'PEN',
     installments:      row.installments ?? 1,
@@ -29,6 +30,7 @@ export function useCreditCharges(userId) {
       user_id:            userId,
       account_id:         charge.accountId,
       description:        charge.description?.trim() ?? '',
+      category:           charge.category ?? 'other',
       amount:             charge.amount,
       currency:           charge.currency ?? 'PEN',
       installments:       charge.installments ?? 1,
@@ -57,5 +59,19 @@ export function useCreditCharges(userId) {
     }
   };
 
-  return { charges, addCharge, deleteCharge, refetch };
+  const updateCharge = async (id, fields) => {
+    const payload = {};
+    if (fields.description !== undefined) payload.description = fields.description;
+    if (fields.category    !== undefined) payload.category    = fields.category;
+    if (fields.amount      !== undefined) payload.amount      = fields.amount;
+    if (fields.date        !== undefined) payload.date        = fields.date;
+    setCharges(prev => prev.map(c => c.id === id ? { ...c, ...fields } : c));
+    const { error } = await supabase.from('credit_charges').update(payload).eq('id', id);
+    if (error) {
+      console.error('[useCreditCharges] update error:', error.message);
+      refetch();
+    }
+  };
+
+  return { charges, addCharge, deleteCharge, updateCharge, refetch };
 }

@@ -1,48 +1,82 @@
-/**
- * CreditView.jsx
- * Vista principal de la sección Crédito.
- * Muestra todas las tarjetas de crédito con su deuda actual.
- * Al hacer tap en una tarjeta → vista detalle con consumos y pagos.
- */
 import React, { useState, useMemo } from 'react';
 import './CreditView.css';
-import { CreditCard, ChevronRight, ChevronLeft, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
+import { CreditCard, ChevronRight, ChevronLeft, ArrowDownLeft, ArrowUpRight, Inbox } from 'lucide-react';
 import { computeCreditDebt, calcTceaInterest, CREDIT_COLOR } from '../utils/accounts';
 import { CREDIT_PAYMENT_CATEGORY } from '../utils/categories';
-import { formatAmount, friendlyDate } from '../utils/expenses';
+import { formatAmount } from '../utils/expenses';
+import { getCurrencyByCode } from '../utils/currencies';
+import { useGroupedByDate } from '../hooks/useGroupedByDate';
+import TransactionRow          from './ui/TransactionRow';
+import DateGroupHeader         from './ui/DateGroupHeader';
+import CreditChargeEditSheet   from './CreditChargeEditSheet';
 
 /* ── Helpers ── */
 function installmentLabel(charge) {
   if (charge.installments <= 1) return null;
-  const start    = new Date(charge.date);
-  const now      = new Date();
-  let months     = (now.getFullYear() - start.getFullYear()) * 12
-                 + (now.getMonth() - start.getMonth());
+  const start   = new Date(charge.date);
+  const now     = new Date();
+  let months    = (now.getFullYear() - start.getFullYear()) * 12
+                + (now.getMonth() - start.getMonth());
   if (now.getDate() >= start.getDate()) months += 1;
-  const elapsed  = Math.min(charge.installments, Math.max(0, months));
+  const elapsed = Math.min(charge.installments, Math.max(0, months));
   return `Cuota ${elapsed}/${charge.installments}`;
 }
 
 /* ══════════════════════════════════════
    DRILL VIEW — detalle de una tarjeta
 ══════════════════════════════════════ */
-function CreditDrillView({ account, charges, payments, onBack }) {
-  // Merge charges and payments into a single chronological list
-  const timeline = useMemo(() => {
-    const items = [
-      ...charges.map(c  => ({ ...c,  _kind: 'charge'  })),
-      ...payments.map(p => ({ ...p,  _kind: 'payment' })),
-    ];
-    return items.sort((a, b) => new Date(b.date) - new Date(a.date));
-  }, [charges, payments]);
+function CreditDrillView({ account, charges, payments, onBack, onDeleteCharge, onUpdateCharge, onPressExpense }) {
+  const [selectedChargeId, setSelectedChargeId] = useState(null);
 
   const debt      = computeCreditDebt(account, charges, payments);
   const interest  = calcTceaInterest(account, debt);
   const limit     = account.creditLimit ?? 0;
   const available = limit > 0 ? Math.max(0, limit - debt) : null;
   const pct       = limit > 0 ? Math.min(100, (debt / limit) * 100) : 0;
+  const cur       = getCurrencyByCode(account.currency);
+
+  // Map charges + payments to TransactionRow-compatible records
+  const allRecords = useMemo(() => {
+    const chargeRecs = charges.map(c => ({
+      id:          `charge-${c.id}`,
+      type:        'personal',
+      category:    c.category || 'other',
+      description: c.description || 'Consumo',
+      amount:      c.amount,
+      currency:    c.currency ?? account.currency,
+      date:        c.date,
+      _installmentLabel: installmentLabel(c),
+    }));
+    const paymentRecs = payments.map(p => ({ ...p, type: 'ingreso' }));
+    return [...chargeRecs, ...paymentRecs];
+  }, [charges, payments, account.currency]);
+
+  const { grouped, dateKeys } = useGroupedByDate(allRecords);
+
+  function groupTotals(records) {
+    let income = 0, expense = 0;
+    records.forEach(r => {
+      if (r.type === 'ingreso') income  += r.amount;
+      else                      expense += r.amount;
+    });
+    return { income, expense };
+  }
+
+  const handleRowPress = (rec) => {
+    if (rec.id.startsWith('charge-')) {
+      const originalId = rec.id.replace(/^charge-/, '');
+      const charge = charges.find(c => String(c.id) === originalId);
+      if (charge) setSelectedChargeId(charge.id);
+    } else {
+      const original = payments.find(p => p.id === rec.id);
+      if (original) onPressExpense?.(original);
+    }
+  };
+
+  const selectedCharge = selectedChargeId ? charges.find(c => c.id === selectedChargeId) : null;
 
   return (
+    <>
     <div className="credit-drill">
       {/* Back */}
       <button className="credit-drill-back" onClick={onBack}>
@@ -50,19 +84,18 @@ function CreditDrillView({ account, charges, payments, onBack }) {
         Mis tarjetas
       </button>
 
-      {/* Card summary */}
+      {/* Card summary — shows only Disponible */}
       <div className="credit-drill-card" style={{ background: CREDIT_COLOR }}>
-        <div className="credit-drill-card-name">{account.name}</div>
-        <div className="credit-drill-card-debt">
-          <span className="credit-drill-card-debt-label">Deuda actual</span>
-          <span className="credit-drill-card-debt-amount">
-            {formatAmount(debt)} {account.currency}
-          </span>
-        </div>
         {available !== null && (
-          <div className="credit-drill-card-avail">
-            Disponible: {formatAmount(available)} {account.currency}
-          </div>
+          <>
+            <div className="credit-drill-card-avail-label">Disponible</div>
+            <div className="credit-drill-card-avail-row">
+              <span className="credit-drill-card-avail-sym">{cur.symbol}</span>
+              <span className="credit-drill-card-avail-amt">
+                {available.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+          </>
         )}
         {limit > 0 && (
           <div className="credit-drill-bar">
@@ -94,65 +127,54 @@ function CreditDrillView({ account, charges, payments, onBack }) {
         )}
       </div>
 
-      {/* Timeline */}
-      {timeline.length === 0 ? (
+      {/* Transactions — gastos-style */}
+      {dateKeys.length === 0 ? (
         <div className="credit-drill-empty">
+          <Inbox size={32} strokeWidth={1.5} />
           <p>Sin movimientos</p>
           <span>Registra un consumo o un pago</span>
         </div>
       ) : (
-        <div className="credit-timeline">
-          {timeline.map(item =>
-            item._kind === 'charge' ? (
-              <div key={item.id} className="credit-timeline-row credit-timeline-row--charge">
-                <div className="credit-timeline-icon credit-timeline-icon--charge">
-                  <ArrowUpRight size={14} strokeWidth={2.5} />
-                </div>
-                <div className="credit-timeline-info">
-                  <span className="credit-timeline-desc">
-                    {item.description || 'Consumo'}
-                  </span>
-                  <span className="credit-timeline-meta">
-                    {friendlyDate(item.date)}
-                    {installmentLabel(item) && (
-                      <span className="credit-timeline-badge">{installmentLabel(item)}</span>
-                    )}
-                  </span>
-                </div>
-                <span className="credit-timeline-amount credit-timeline-amount--charge">
-                  -{formatAmount(item.amount)} {item.currency}
-                </span>
+        <div className="credit-txns">
+          {dateKeys.map(dateKey => (
+            <div key={dateKey} className="exp-date-group">
+              <DateGroupHeader
+                label={dateKey}
+                currency={account.currency}
+                {...groupTotals(grouped[dateKey])}
+              />
+              <div className="exp-day-block">
+                {grouped[dateKey].map((rec, idx) => (
+                  <React.Fragment key={rec.id}>
+                    {idx > 0 && <div className="exp-day-divider" />}
+                    <TransactionRow record={rec} onPress={handleRowPress} />
+                  </React.Fragment>
+                ))}
               </div>
-            ) : (
-              <div key={item.id} className="credit-timeline-row credit-timeline-row--payment">
-                <div className="credit-timeline-icon credit-timeline-icon--payment">
-                  <ArrowDownLeft size={14} strokeWidth={2.5} />
-                </div>
-                <div className="credit-timeline-info">
-                  <span className="credit-timeline-desc">
-                    {item.description || 'Pago'}
-                  </span>
-                  <span className="credit-timeline-meta">{friendlyDate(item.date)}</span>
-                </div>
-                <span className="credit-timeline-amount credit-timeline-amount--payment">
-                  +{formatAmount(item.amount)} {item.currency}
-                </span>
-              </div>
-            )
-          )}
+            </div>
+          ))}
           <div style={{ height: 110 }} />
         </div>
       )}
     </div>
+
+    {selectedCharge && (
+      <CreditChargeEditSheet
+        charge={selectedCharge}
+        accountName={account.name}
+        onClose={() => setSelectedChargeId(null)}
+        onDelete={onDeleteCharge}
+        onUpdate={onUpdateCharge}
+      />
+    )}
+    </>
   );
 }
 
 /* ══════════════════════════════════════
    MAIN VIEW — lista de tarjetas
 ══════════════════════════════════════ */
-export default function CreditView({ accounts, charges, expenses, onAddCharge, onAddPayment }) {
-  const [drillId, setDrillId] = useState(null);
-
+export default function CreditView({ accounts, charges, expenses, drillId, onDrillChange, onAddCharge, onAddPayment, onDeleteCharge, onUpdateCharge, onPressExpense }) {
   const creditAccounts = useMemo(
     () => accounts.filter(a => a.isCredit),
     [accounts]
@@ -201,7 +223,10 @@ export default function CreditView({ accounts, charges, expenses, onAddCharge, o
           account={drillAccount}
           charges={charges.filter(c => c.accountId === drillId)}
           payments={creditPayments.filter(p => p.creditAccountId === drillId)}
-          onBack={() => setDrillId(null)}
+          onBack={() => onDrillChange(null)}
+          onDeleteCharge={onDeleteCharge}
+          onUpdateCharge={onUpdateCharge}
+          onPressExpense={onPressExpense}
         />
         {fab}
       </>
@@ -222,7 +247,7 @@ export default function CreditView({ accounts, charges, expenses, onAddCharge, o
           <button
             key={account.id}
             className="credit-card-item"
-            onClick={() => setDrillId(account.id)}
+            onClick={() => onDrillChange(account.id)}
           >
             <div className="credit-card-item-strip" />
             <div className="credit-card-item-body">

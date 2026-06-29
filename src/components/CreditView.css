@@ -122,6 +122,22 @@
   color: #d97706;
 }
 
+/* FAB wrap */
+.credit-fab-wrap {
+  position: fixed;
+  bottom: calc(var(--nav-h, 72px) + 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 100;
+}
+
+/* Transactions container in drill */
+.credit-txns {
+  padding: 0 var(--space-md);
+}
+
 /* FAB flotante de crédito */
 .credit-fab-pill {
   display: flex;
@@ -204,31 +220,30 @@
   flex-direction: column;
   gap: 6px;
 }
-.credit-drill-card-name {
-  font-size: 14px;
+.credit-drill-card-avail-label {
+  font-size: 11px;
   font-weight: 700;
-  color: rgba(255,255,255,.75);
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  color: rgba(255,255,255,.62);
+  margin-bottom: 4px;
 }
-.credit-drill-card-debt {
+.credit-drill-card-avail-row {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: baseline;
+  gap: 5px;
 }
-.credit-drill-card-debt-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: rgba(255,255,255,.6);
+.credit-drill-card-avail-sym {
+  font-size: 16px;
+  font-weight: 700;
+  color: rgba(255,255,255,.62);
 }
-.credit-drill-card-debt-amount {
-  font-size: 28px;
+.credit-drill-card-avail-amt {
+  font-size: 38px;
   font-weight: 900;
   color: #fff;
-  letter-spacing: -1px;
-}
-.credit-drill-card-avail {
-  font-size: 12px;
-  font-weight: 600;
-  color: rgba(255,255,255,.7);
+  letter-spacing: -1.5px;
+  line-height: 1;
 }
 .credit-drill-bar {
   height: 4px;

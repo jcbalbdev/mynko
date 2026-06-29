@@ -98,6 +98,8 @@
 .txn-edit-amount-input { background: transparent; border: none; outline: none; font-family: var(--font); font-size: 44px; font-weight: 900; letter-spacing: -1.5px; color: var(--label-primary); caret-color: var(--color-dark); text-align: left; min-width: 44px; }
 .txn-edit-amount-input::placeholder { color: var(--label-quaternary); }
 .txn-edit-currency { font-size: 18px; font-weight: 700; color: var(--label-tertiary); }
+.txn-edit-desc-input { background: transparent; border: none; outline: none; font-family: var(--font); font-size: 14px; font-weight: 600; color: var(--label-primary); caret-color: var(--color-dark); text-align: right; flex: 1; min-width: 0; }
+.txn-edit-desc-input::placeholder { color: var(--label-quaternary); }
 .txn-edit-cat-pills { display: flex; align-items: center; gap: 6px; }
 .txn-edit-cat-pill { font-size: 11px; font-weight: 800; color: #fff; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.4px; }
 

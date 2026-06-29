@@ -1,193 +1,223 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useMemo } from 'react';
+import { ArrowLeftRight, Inbox } from 'lucide-react';
 import './AccountsCarouselView.css';
-import { ArrowLeftRight, Plus } from 'lucide-react';
 import { getCurrencyByCode } from '../utils/currencies';
-import { getAccountTypeLabel, computeAccountBalance } from '../utils/accounts';
+import { computeAccountBalance, computeCreditDebt } from '../utils/accounts';
+import { CREDIT_PAYMENT_CATEGORY, EXPENSE_COLORS } from '../utils/categories';
+import { useGroupedByDate } from '../hooks/useGroupedByDate';
+import TransactionRow  from './ui/TransactionRow';
+import DateGroupHeader from './ui/DateGroupHeader';
 
-/* Solid colors per account type */
-const T = {
-  efectivo: { color: '#2C2C2E', label: 'Efectivo' },
-  banco:    { color: '#2C2C2E', label: 'Banco'    },
-  ahorro:   { color: '#2C2C2E', label: 'Ahorro'   },
-};
+const CARD_HEIGHT = 200;
+const PEEK        = 60;
+const OVERLAP     = CARD_HEIGHT - PEEK;
 
-const SLOT_X   = 48;   /* peek = 48 - 318×0.1 = 16px uniform */
-const FRICTION = 0.85;   /* menos inercia → frena más rápido */
-const SPRING   = 0.25;   /* snap más rápido y rígido         */
-const ELASTIC  = 0.10;
+// Step 7 is coprime with 48 → visits all 48 palette colors before repeating
+function getCardColor(idx) {
+  return EXPENSE_COLORS[(idx * 7) % EXPENSE_COLORS.length].hex;
+}
 
-export default function AccountsCarouselView({ accounts=[], expenses=[], onOpenAddAccount, onCardPress, onInfo, onTransfer, onActiveChange }) {
-  const items = [...accounts, { id:'__add__' }];
-  const n     = items.length;
-
-  const [offset, setOffset]     = useState(0);
-  const [isDragging, setIsDrag] = useState(false);
-  const offRef  = useRef(0);
-  const velRef  = useRef(0);
-  const rafRef  = useRef(null);
-  const rootRef = useRef(null);
-  const startX  = useRef(0);
-  const startY  = useRef(0);
-  const lastX   = useRef(0);
-  const lastT   = useRef(0);
-  const didDrag = useRef(false);
-  const isHoriz = useRef(null);
-
-  const minOff = -(n - 1) * SLOT_X;
-  const clamp  = v => v > 0 ? v*ELASTIC : v < minOff ? minOff+(v-minOff)*ELASTIC : v;
-  const snap   = v => -Math.max(0, Math.min(n-1, Math.round(-v/SLOT_X)))*SLOT_X;
-  const cancel = () => rafRef.current && cancelAnimationFrame(rafRef.current);
-
-  const springSnap = () => {
-    setIsDrag(false);
-    const tgt = snap(offRef.current);
-    const go  = () => {
-      const d = tgt - offRef.current;
-      if (Math.abs(d) < 0.3) {
-        offRef.current = tgt;
-        setOffset(tgt);
-        return;
-      }
-      offRef.current += d * SPRING; setOffset(offRef.current);
-      rafRef.current = requestAnimationFrame(go);
-    };
-    rafRef.current = requestAnimationFrame(go);
+function transferToRecord(t, account, accounts) {
+  const isOutgoing = t.fromAccountId === account.id;
+  const otherAcc   = accounts.find(a => a.id === (isOutgoing ? t.toAccountId : t.fromAccountId));
+  return {
+    id:          `transfer-${t.id}`,
+    type:        isOutgoing ? 'personal' : 'ingreso',
+    category:    'transfer',
+    description: t.note || otherAcc?.name || 'Otra cuenta',
+    amount:      t.amount,
+    currency:    t.currency,
+    date:        t.date,
   };
+}
 
-  const momentum = () => {
-    const tick = () => {
-      let v = velRef.current, o = offRef.current;
-      if (Math.abs(v) < 0.4) { velRef.current = 0; springSnap(); return; }
-      if (o > 0 || o < minOff) v *= 0.6;
-      v *= FRICTION; o = clamp(o + v);
-      velRef.current = v; offRef.current = o; setOffset(o);
-      rafRef.current = requestAnimationFrame(tick);
-    };
-    rafRef.current = requestAnimationFrame(tick);
-  };
+/* ── Inline full transaction list ── */
+function InlineTxList({ account, expenses, transfers, accounts }) {
+  const allRecords = useMemo(() => {
+    const expFiltered = expenses
+      .filter(e => e.accountId === account.id || (e.type === 'cambio' && e.fromAccountId === account.id))
+      .map(e => (e.type === 'cambio' && e.fromAccountId === account.id && e.accountId !== account.id)
+        ? { ...e, _isOutflow: true } : e);
+    const txFiltered = transfers
+      .filter(t => t.fromAccountId === account.id || t.toAccountId === account.id)
+      .map(t => transferToRecord(t, account, accounts));
+    return [...expFiltered, ...txFiltered];
+  }, [expenses, transfers, accounts, account]);
 
-  useEffect(() => {
-    const el = rootRef.current; if (!el) return;
-    const mv = e => {
-      const t  = e.touches[0];
-      const dx = t.clientX - startX.current;
-      const dy = t.clientY - startY.current;
-      if (isHoriz.current === null) {
-        if (Math.abs(dx) > 5 || Math.abs(dy) > 5)
-          isHoriz.current = Math.abs(dx) > Math.abs(dy);
-        return;
-      }
-      if (!isHoriz.current) return;
-      e.preventDefault();
-      didDrag.current = true;
-      const nowDx = t.clientX - lastX.current;
-      const dt    = performance.now() - lastT.current;
-      velRef.current = dt > 0 ? (nowDx/dt)*16 : 0;
-      offRef.current = clamp(offRef.current + nowDx);
-      setOffset(offRef.current);
-      lastX.current = t.clientX; lastT.current = performance.now();
-    };
-    el.addEventListener('touchmove', mv, { passive: false });
-    return () => el.removeEventListener('touchmove', mv);
-  }, [n, minOff]);
+  const { grouped, dateKeys } = useGroupedByDate(allRecords);
+  const currency = account.currency ?? 'PEN';
 
-  const onTS = e => {
-    cancel(); didDrag.current=false; isHoriz.current=null; velRef.current=0;
-    setIsDrag(true);
-    startX.current=e.touches[0].clientX; startY.current=e.touches[0].clientY;
-    lastX.current=e.touches[0].clientX; lastT.current=performance.now();
-  };
-  const onTE = () => { isHoriz.current ? momentum() : setIsDrag(false); };
-  useEffect(() => () => cancel(), []);
-
-  const activeIdx  = Math.max(0, Math.min(n-1, Math.round(-offset/SLOT_X)));
-  const fractional = offset + activeIdx * SLOT_X;
-  const tr = isDragging ? 'opacity 0.1s' : 'transform 0.55s cubic-bezier(.25,.46,.45,.94), opacity 0.35s ease';
-
-  // Sync parent whenever activeIdx changes (swipe, array resize, remount)
-  useEffect(() => {
-    const realIdx = Math.max(0, Math.min(accounts.length - 1, activeIdx));
-    onActiveChange?.(realIdx);
-  }, [activeIdx, accounts.length]);
+  function groupTotals(records) {
+    let income = 0, expense = 0;
+    records.forEach(r => {
+      const amt = r._isOutflow ? (r.fromAmount ?? r.amount) : r.amount;
+      if (r._isOutflow || (r.type !== 'ingreso' && r.type !== 'cambio')) expense += amt;
+      else income += amt;
+    });
+    return { income, expense };
+  }
 
   return (
-    <div ref={rootRef} className="acw-root" onTouchStart={onTS} onTouchEnd={onTE}>
-
-      {items.map((item, idx) => {
-        const dist = Math.abs(idx - activeIdx);
-        if (dist >= 4) return null;
-
-        const isActive = idx === activeIdx;
-        const cfg      = T[item.type] ?? { color: '#2C2C2E', label: '' };
-        const scale    = Math.max(0.4, 1 - dist * 0.2);
-        const zIdx     = 10 - dist * 2;
-        const opacity  = [1.0, 0.88, 0.70, 0.50][dist];
-        const xOff     = (idx - activeIdx) * SLOT_X + fractional;
-
-        const handleClick = () => {
-          if (didDrag.current) return;
-          if (item.id === '__add__') { onOpenAddAccount?.(); return; }
-          if (isActive) onCardPress?.(item);
-        };
-
-        const wrapStyle = {
-          position: 'absolute',
-          top: '50%', left: '50%',
-          transform: `translate(calc(-50% + ${xOff}px), -50%) scale(${scale})`,
-          zIndex: zIdx,
-          opacity,
-          transition: tr,
-          cursor: isActive ? 'pointer' : 'default',
-        };
-
-        /* ── Add card ── */
-        if (item.id === '__add__') return (
-          <div key="__add__" style={wrapStyle} className="acw-card-wrap" onClick={handleClick}>
-            <div className="acw-portrait-add">
-              <div className="acw-add-circle"><Plus size={26} strokeWidth={1.8}/></div>
-              <span className="acw-add-label">Nueva cuenta</span>
+    <div className="wallet-inline-txns">
+      {allRecords.length > 0 && (
+        <p className="wallet-inline-count">
+          {allRecords.length} movimiento{allRecords.length !== 1 ? 's' : ''}
+        </p>
+      )}
+      {dateKeys.length === 0 ? (
+        <div className="wallet-inline-empty">
+          <Inbox size={32} strokeWidth={1.5} />
+          <span>Sin movimientos</span>
+        </div>
+      ) : (
+        dateKeys.map(dateKey => (
+          <div key={dateKey} className="exp-date-group">
+            <DateGroupHeader
+              label={dateKey}
+              currency={currency}
+              {...groupTotals(grouped[dateKey])}
+            />
+            <div className="exp-day-block">
+              {grouped[dateKey].map((rec, idx) => (
+                <React.Fragment key={rec.id}>
+                  {idx > 0 && <div className="exp-day-divider" />}
+                  <TransactionRow record={rec} readonly />
+                </React.Fragment>
+              ))}
             </div>
           </div>
-        );
+        ))
+      )}
+      <div style={{ height: 32 }} />
+    </div>
+  );
+}
 
-        const balance  = computeAccountBalance(item, expenses);
-        const currency = item.currency || 'PEN';
-        const absAmt   = Math.abs(balance).toLocaleString('es-MX', { minimumFractionDigits:2, maximumFractionDigits:2 });
+/* ════════════════════════════════════════
+   MAIN COMPONENT
+════════════════════════════════════════ */
+export default function AccountsCarouselView({
+  accounts  = [],
+  expenses  = [],
+  charges   = [],
+  transfers = [],
+  expandedIdx = -1,
+  onExpandedChange,
+  onOpenAddAccount,
+  onInfo,
+  onTransfer,
+}) {
+  const creditPayments = expenses.filter(e => e.category === CREDIT_PAYMENT_CATEGORY.id);
 
-        /* Account card — solid color background */
-        return (
-          <div key={item.id} style={wrapStyle} className="acw-card-wrap" onClick={handleClick}>
-            <div className="acw-portrait-card" style={{ background: cfg.color }}>
+  const getBalance = (account) => {
+    if (account.isCredit) {
+      const debt  = computeCreditDebt(account, charges, creditPayments);
+      const limit = account.creditLimit ?? 0;
+      return { value: limit > 0 ? limit - debt : -debt, label: 'Disponible' };
+    }
+    return { value: computeAccountBalance(account, expenses), label: 'Saldo' };
+  };
 
-              {/* TOP ROW — transfer icon left, info icon right */}
-              <div className="acw-portrait-top">
-                <div
-                  className="acw-portrait-icon-wrap"
-                  onClick={e => { e.stopPropagation(); onTransfer?.(item); }}
-                >
-                  <ArrowLeftRight size={16} strokeWidth={2} color="rgba(255,255,255,0.9)"/>
-                </div>
-                <div
-                  className="acw-portrait-icon-wrap"
-                  onClick={e => { e.stopPropagation(); onInfo?.(item); }}
-                >
-                  <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 15, fontStyle: 'italic', fontWeight: 700, lineHeight: 1, userSelect: 'none' }}>i</span>
-                </div>
-              </div>
+  const colorMap = accounts.map((_, idx) => getCardColor(idx));
 
-              {/* BOTTOM ROW */}
-              <div className="acw-portrait-bottom">
-                {/* Account name bottom-left */}
-                <span className="acw-portrait-name">{item.name}</span>
-                {/* VISA bottom-right */}
-                <span className="acw-portrait-visa">VISA</span>
-              </div>
+  const isAnyExpanded = expandedIdx >= 0;
 
+  /* ── EXPANDED MODE ── */
+  if (isAnyExpanded) {
+    const account = accounts[expandedIdx];
+    if (!account) return null;
+
+    const color = colorMap[expandedIdx];
+    const cur   = getCurrencyByCode(account.currency);
+    const { value: balance, label: balLabel } = getBalance(account);
+    const isNeg = balance < 0;
+
+    return (
+      <div className="wallet-stack">
+        {/* Card face */}
+        <div
+          className="wallet-card wallet-card--open"
+          style={{ '--wc': color, position: 'relative' }}
+        >
+          <div className="wallet-strip">
+            <span className="wallet-strip-name">{account.name}</span>
+            <div className="wallet-strip-actions">
+              <button
+                className="wallet-icon-btn"
+                onClick={e => { e.stopPropagation(); onTransfer?.(account); }}
+                aria-label="Transferir"
+              >
+                <ArrowLeftRight size={14} strokeWidth={2.2} />
+              </button>
+              <button
+                className="wallet-icon-btn"
+                onClick={e => { e.stopPropagation(); onInfo?.(account); }}
+                aria-label="Información"
+              >
+                <span className="wallet-info-i">i</span>
+              </button>
             </div>
           </div>
-        );
-      })}
 
+          <div className="wallet-card-face wallet-card-face--visible">
+            <span className="wallet-face-label">{balLabel}</span>
+            <div className="wallet-face-amount-row">
+              <span className="wallet-face-sym">{cur.symbol}</span>
+              <span className={`wallet-face-amt${isNeg ? ' neg' : ''}`}>
+                {Math.abs(balance).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Full inline transaction list */}
+        <InlineTxList
+          account={account}
+          expenses={expenses}
+          transfers={transfers}
+          accounts={accounts}
+        />
+      </div>
+    );
+  }
+
+  /* ── COLLAPSED MODE ── */
+  return (
+    <div className="wallet-stack">
+      {accounts.map((account, idx) => (
+        <div
+          key={account.id}
+          className="wallet-card"
+          style={{
+            '--wc': colorMap[idx],
+            marginTop: idx === 0 ? 0 : -OVERLAP,
+            zIndex: idx + 1,
+            position: 'relative',
+            cursor: 'pointer',
+          }}
+          onClick={() => onExpandedChange?.(idx)}
+        >
+          <div className="wallet-strip">
+            <span className="wallet-strip-name">{account.name}</span>
+            <div className="wallet-strip-actions">
+              <button
+                className="wallet-icon-btn"
+                onClick={e => { e.stopPropagation(); onTransfer?.(account); }}
+                aria-label="Transferir"
+              >
+                <ArrowLeftRight size={14} strokeWidth={2.2} />
+              </button>
+              <button
+                className="wallet-icon-btn"
+                onClick={e => { e.stopPropagation(); onInfo?.(account); }}
+                aria-label="Información"
+              >
+                <span className="wallet-info-i">i</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

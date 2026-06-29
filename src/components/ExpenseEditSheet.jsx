@@ -16,6 +16,7 @@ import { Trash2, Check, X, Banknote, Building2, PiggyBank } from 'lucide-react';
 import BaseSheet              from './ui/BaseSheet';
 import ConfirmDeleteSheet     from './ui/ConfirmDeleteSheet';
 import CalendarModal          from './ui/CalendarModal';
+import CategoryPickerSheet    from './ui/CategoryPickerSheet';
 import { resolveCategory }    from '../utils/categories';
 import { formatAmount }       from '../utils/formatters';
 import { getCurrencyByCode }  from '../utils/currencies';
@@ -37,8 +38,6 @@ export default function ExpenseEditSheet({
   accounts = [],
 }) {
   const userCategories = useUserCategoriesCtx();
-  const subcat   = resolveCategory(expense.category, userCategories);  // subcategoría
-  const parentCat = subcat.parentId ? resolveCategory(subcat.parentId, userCategories) : null;
   const currency = getCurrencyByCode(expense.currency ?? 'MXN');
 
   // Cuenta vinculada
@@ -50,8 +49,12 @@ export default function ExpenseEditSheet({
   const [category,    setCategory]    = useState(expense.category);
   const [location,    setLocation]    = useState(expense.location ?? '');
   const [sharedPaid,  setSharedPaid]  = useState(expense.sharedPaid ?? false);
-  const [confirmDel,   setConfirmDel]   = useState(false);
-  const [showCalendar, setShowCalendar] = useState(false);
+  const [confirmDel,      setConfirmDel]      = useState(false);
+  const [showCalendar,    setShowCalendar]    = useState(false);
+  const [showCatPicker,   setShowCatPicker]   = useState(false);
+
+  const subcat    = resolveCategory(category, userCategories);
+  const parentCat = subcat.parentId ? resolveCategory(subcat.parentId, userCategories) : null;
 
   // Editable date — keep time from original, only change the date part
   const originalDate = new Date(expense.date);
@@ -144,7 +147,7 @@ export default function ExpenseEditSheet({
             style={{ width: `${Math.max((String(amount) || '0').length, 2) * 27 + 8}px` }}
           />
         </div>
-        <div className="txn-edit-cat-pills">
+        <div className="txn-edit-cat-pills" onClick={() => setShowCatPicker(true)} style={{ cursor: 'pointer' }}>
           {parentCat && parentCat.id !== subcat.id && (
             <span className="txn-edit-cat-pill" style={{ background: subcat.bg ?? subcat.color }}>{parentCat.label}</span>
           )}
@@ -220,6 +223,14 @@ export default function ExpenseEditSheet({
           onClose={() => setShowCalendar(false)}
         />
       )}
+
+      <CategoryPickerSheet
+        open={showCatPicker}
+        onClose={() => setShowCatPicker(false)}
+        selected={category}
+        onSelect={(cat) => { setCategory(cat); setShowCatPicker(false); }}
+        userCategories={userCategories}
+      />
     </BaseSheet>
   );
 }

@@ -5,12 +5,13 @@
  */
 import React, { useState, useMemo, useCallback } from 'react';
 import './FormSheets.css';
-import BaseSheet     from './ui/BaseSheet';
-import FormSection   from './ui/FormSection';
-import AmountInput   from './ui/AmountInput';
-import DateField     from './ui/DateField';
-import CurrencyPicker from './ui/CurrencyPicker';
-import DescriptionInput from './ui/DescriptionInput';
+import BaseSheet          from './ui/BaseSheet';
+import FormSection        from './ui/FormSection';
+import AmountInput        from './ui/AmountInput';
+import DateField          from './ui/DateField';
+import CurrencyPicker     from './ui/CurrencyPicker';
+import DescriptionInput   from './ui/DescriptionInput';
+import CategoryPickerField from './ui/CategoryPickerField';
 
 export default function AddCreditChargeSheet({
   onAdd,
@@ -23,6 +24,7 @@ export default function AddCreditChargeSheet({
   const [accountId,    setAccountId]    = useState(initialAccountId || creditAccounts[0]?.id || '');
   const [amount,       setAmount]       = useState('');
   const [description,  setDescription]  = useState('');
+  const [category,     setCategory]     = useState('');
   const [currency,     setCurrency]     = useState(defaultCurrency);
   const [date,         setDate]         = useState(new Date());
   const [withInstall,  setWithInstall]  = useState(false);
@@ -72,6 +74,7 @@ export default function AddCreditChargeSheet({
       accountId,
       amount:            parsedAmount,
       description:       description.trim(),
+      category:          category || 'other',
       currency,
       date,
       installments:      withInstall && parsedInst >= 2 ? parsedInst : 1,
@@ -101,6 +104,12 @@ export default function AddCreditChargeSheet({
           onPick={handleDescriptionPick}
           suggestions={descriptionSuggestions}
           placeholder="¿En qué consumiste?"
+        />
+
+        <CategoryPickerField
+          selected={category}
+          onSelect={setCategory}
+          expenses={expenses}
         />
 
         <FormSection label="Tarjeta">

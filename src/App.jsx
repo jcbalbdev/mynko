@@ -100,7 +100,7 @@ function AuthenticatedApp({ user, signOut }) {
 
   const { transfers, createTransfer } = useTransfers(user.id);
 
-  const { charges, addCharge } = useCreditCharges(user.id);
+  const { charges, addCharge, deleteCharge, updateCharge } = useCreditCharges(user.id);
 
   const {
     recurring,
@@ -454,6 +454,8 @@ function AuthenticatedApp({ user, signOut }) {
             charges={charges}
             onAddCharge={handleAddCharge}
             onAddPayment={handleAddPayment}
+            onDeleteCharge={deleteCharge}
+            onUpdateCharge={updateCharge}
             yapePermission={hasPermission}
             onRequestYapePermission={requestPermission}
             recurring={recurring}

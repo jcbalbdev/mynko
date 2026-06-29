@@ -130,8 +130,10 @@
   position: absolute;
 }
 .home-avatar-btn:active { opacity: 0.8; transform: scale(0.9); }
-.home-menu-wrap { top: 14px; right: var(--space-md); z-index: 10; position: absolute; }
+.home-menu-wrap { top: 14px; right: var(--space-md); z-index: 10; position: absolute; display: flex; align-items: center; gap: 0; }
 .home-menu-btn { position: static; top: auto; left: auto; }
+.home-menu-wrap--pill { background: #EEEEEE; border-radius: var(--radius-full); overflow: hidden; gap: 0; }
+.home-menu-wrap--pill .home-avatar-btn { position: static; top: auto; left: auto; background: transparent; }
 
 /* Dropdown — used by location filter pill */
 .home-menu-dropdown {
@@ -319,9 +321,9 @@
 .home-scroll--cuentas {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden !important;
+  align-items: stretch;
+  justify-content: flex-start;
+  overflow: hidden auto !important;
   background: transparent !important;
 }
 

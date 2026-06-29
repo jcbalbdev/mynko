@@ -8,7 +8,7 @@ import './HomeScreen.css';
 import { useHomeSheets } from '../hooks/useHomeSheets';
 import { useQuickAdd }   from '../hooks/useQuickAdd';
 import { useMenuConfig } from '../hooks/useMenuConfig';
-import { Settings, Menu, Receipt, HandCoins, TrendingUp, Scale, ArrowLeftRight, ChevronLeft, ChevronRight, Wallet, X, CreditCard, Repeat, Search, Zap, ChevronDown, MapPin } from 'lucide-react';
+import { Settings, Menu, Receipt, HandCoins, TrendingUp, Scale, ArrowLeftRight, ChevronLeft, ChevronRight, Wallet, X, CreditCard, Repeat, Search, Zap, ChevronDown, MapPin, Plus } from 'lucide-react';
 import BarChart               from './BarChart';
 import DebtListView          from './DebtListView';
 import IncomeListView        from './IncomeListView';
@@ -115,6 +115,8 @@ export default function HomeScreen({
   charges              = [],
   onAddCharge,
   onAddPayment,
+  onDeleteCharge,
+  onUpdateCharge,
   yapePermission       = false,
   onRequestYapePermission,
   recurring            = [],
@@ -405,9 +407,10 @@ export default function HomeScreen({
 
   /* ── Active account (for cuentas header) ── */
   const [activeAccountIdx, setActiveAccountIdx] = useState(0);
-  // Reset to 0 whenever user enters cuentas — carousel always remounts at offset=0
+  const [walletExpandedIdx, setWalletExpandedIdx] = useState(-1);
+  // Reset to collapsed whenever user enters cuentas
   useEffect(() => {
-    if (activeView === 'cuentas') setActiveAccountIdx(0);
+    if (activeView === 'cuentas') { setActiveAccountIdx(0); setWalletExpandedIdx(-1); }
   }, [activeView]);
   const activeAccount = sortedAccounts[activeAccountIdx] ?? null;
   const activeAccBalance = useMemo(() => {
@@ -447,11 +450,21 @@ export default function HomeScreen({
       .reduce((sum, a) => sum + computeCreditDebt(a, charges, creditPayments), 0);
   }, [accounts, charges, expenses]);
 
+  /* ── Drilled credit account state (lifted from CreditView) ── */
+  const [creditDrillId, setCreditDrillId] = useState(null);
+  useEffect(() => { if (activeView !== 'credito') setCreditDrillId(null); }, [activeView]);
+  const creditDrillAccount = creditDrillId ? accounts.find(a => a.id === creditDrillId) : null;
+  const creditDrillDebt = useMemo(() => {
+    if (!creditDrillAccount) return creditTotal;
+    const creditPayments = expenses.filter(e => e.category === CREDIT_PAYMENT_CATEGORY.id);
+    return computeCreditDebt(creditDrillAccount, charges, creditPayments);
+  }, [creditDrillAccount, charges, expenses, creditTotal]);
+
   /* ── Display amount split ── */
   const displayTotal = activeView === 'deudas'   ? (searchDebtTotal   ?? debtTotal)
                      : activeView === 'ingresos'  ? (incomeDrillTotal  ?? searchIncomeTotal ?? incomeTotal)
                      : activeView === 'balance'   ? Math.abs(balanceNet)
-                     : activeView === 'credito'   ? creditTotal
+                     : activeView === 'credito'   ? creditDrillDebt
                      : activeView === 'cambio'    ? 0
                      : activeView === 'cuentas'   ? 0
                      : drillCategory ? (drillTotal ?? 0)
@@ -481,10 +494,16 @@ export default function HomeScreen({
               searchOpen ? 'home-search-pill--open' : '',
             ].filter(Boolean).join(' ')}
           >
-            {/* Profile btn — always visible */}
-            <button className="home-pill-profile-btn" onClick={actions.openProfile} id="btn-open-profile" aria-label="Configuración">
-              <Settings size={18} strokeWidth={2.5} />
-            </button>
+            {/* Profile btn — shows X when a wallet card is expanded */}
+            {activeView === 'cuentas' && walletExpandedIdx >= 0 ? (
+              <button className="home-pill-profile-btn" onClick={() => setWalletExpandedIdx(-1)} aria-label="Colapsar tarjetas">
+                <X size={18} strokeWidth={2.5} />
+              </button>
+            ) : (
+              <button className="home-pill-profile-btn" onClick={actions.openProfile} id="btn-open-profile" aria-label="Configuración">
+                <Settings size={18} strokeWidth={2.5} />
+              </button>
+            )}
 
             {/* Separator + search icon */}
             {['gastos', 'ingresos', 'deudas'].includes(activeView) && (
@@ -540,7 +559,19 @@ export default function HomeScreen({
         </div>
 
         {/* Menu button — stays absolutely positioned top-right */}
-        <div className="home-menu-wrap" ref={menuRef}>
+        <div className={`home-menu-wrap${activeView === 'cuentas' ? ' home-menu-wrap--pill' : ''}`} ref={menuRef}>
+          {activeView === 'cuentas' && (
+            <>
+              <button
+                className="home-avatar-btn"
+                onClick={actions.openAddAccSheet}
+                aria-label="Agregar cuenta"
+              >
+                <Plus size={18} strokeWidth={2.5} />
+              </button>
+              <span className="home-pill-sep" aria-hidden />
+            </>
+          )}
           <button
             className="home-avatar-btn home-menu-btn"
             onClick={() => setShowMenu(v => !v)}
@@ -565,16 +596,16 @@ export default function HomeScreen({
              : activeView === 'ingresos'    ? 'Total de ingresos'
              : activeView === 'balance'     ? 'Balance neto'
              : activeView === 'cambio'      ? 'Cambio de moneda'
-             : activeView === 'cuentas'     ? (activeAccount?.name ?? 'Mis cuentas')
-             : activeView === 'credito'     ? 'Deuda total'
+             : activeView === 'cuentas'     ? 'Mis cuentas'
+             : activeView === 'credito'     ? (creditDrillAccount ? `Deuda actual ${creditDrillAccount.name}` : 'Deuda total')
              : activeView === 'recurrentes' ? recurringTitle
              : activeView === 'rapido'      ? 'Acceso Rápido'
              : 'Total de gastos'}
           </p>
         )}
 
-        {/* Big amount — hidden for cambio, recurrentes and rapido */}
-        {activeView !== 'cambio' && activeView !== 'recurrentes' && activeView !== 'rapido' && (
+        {/* Big amount — hidden for cambio, recurrentes, rapido and cuentas */}
+        {activeView !== 'cambio' && activeView !== 'recurrentes' && activeView !== 'rapido' && activeView !== 'cuentas' && (
           <div className="home-amount-row">
             {activeView === 'cuentas' ? (
               <>
@@ -793,8 +824,13 @@ export default function HomeScreen({
             accounts={accounts}
             charges={charges}
             expenses={expenses}
+            drillId={creditDrillId}
+            onDrillChange={setCreditDrillId}
             onAddCharge={(accountId) => actions.openCreditChargeSheet(accountId)}
             onAddPayment={(accountId) => actions.openCreditPaySheet(accountId)}
+            onDeleteCharge={onDeleteCharge}
+            onUpdateCharge={onUpdateCharge}
+            onPressExpense={actions.openExpEdit}
           />
         ) : activeView === 'cambio' ? (
           <ExchangeView expenses={expenses} accounts={accounts} />
@@ -802,11 +838,13 @@ export default function HomeScreen({
           <AccountsCarouselView
             accounts={sortedAccounts}
             expenses={expenses}
+            charges={charges}
+            transfers={transfers}
+            expandedIdx={walletExpandedIdx}
+            onExpandedChange={(idx) => { setWalletExpandedIdx(idx); setActiveAccountIdx(idx >= 0 ? idx : 0); }}
             onOpenAddAccount={actions.openAddAccSheet}
-            onCardPress={actions.openTxSheet}
             onInfo={actions.selectAccount}
             onTransfer={actions.openTransferSheet}
-            onActiveChange={(idx) => setActiveAccountIdx(idx)}
           />
         ) : activeView === 'recurrentes' ? (
           <RecurringListView
