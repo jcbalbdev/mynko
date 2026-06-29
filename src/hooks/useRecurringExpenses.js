@@ -252,6 +252,38 @@ export function useRecurringExpenses(userId) {
 
     for (const rec of due) {
       try {
+        // Check if a matching expense already exists for this due date to avoid duplicates
+        const dueDateStr = rec.nextDueDate; // 'YYYY-MM-DD'
+        const { data: existing } = await supabase
+          .from('expenses')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('description', rec.description)
+          .eq('amount', rec.amount)
+          .gte('date', dueDateStr + 'T00:00:00')
+          .lte('date', dueDateStr + 'T23:59:59')
+          .limit(1);
+
+        if (existing && existing.length > 0) {
+          // Already registered — just advance nextDueDate without creating a duplicate
+          const nextDue    = computeNextDueDate({
+            frequency:    rec.frequency,
+            days_of_week: rec.daysOfWeek,
+            day_of_month: rec.dayOfMonth,
+            yearly_day:   rec.yearlyDay,
+            yearly_month: rec.yearlyMonth,
+          }, new Date(rec.nextDueDate));
+          const nextDueStr = toDateString(nextDue);
+          setRecurring(prev => prev.map(r =>
+            r.id === rec.id ? { ...r, nextDueDate: nextDueStr } : r
+          ));
+          await supabase.from('recurring_expenses').update({
+            next_due_date: nextDueStr,
+            updated_at:    new Date().toISOString(),
+          }).eq('id', rec.id);
+          continue;
+        }
+
         await addExpense({
           amount:      rec.amount,
           description: rec.description,
