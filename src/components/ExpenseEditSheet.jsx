@@ -15,6 +15,7 @@ import React, { useState } from 'react';
 import { Trash2, Check, X, Banknote, Building2, PiggyBank } from 'lucide-react';
 import BaseSheet              from './ui/BaseSheet';
 import ConfirmDeleteSheet     from './ui/ConfirmDeleteSheet';
+import CalendarModal          from './ui/CalendarModal';
 import { resolveCategory }    from '../utils/categories';
 import { formatAmount }       from '../utils/formatters';
 import { getCurrencyByCode }  from '../utils/currencies';
@@ -49,17 +50,12 @@ export default function ExpenseEditSheet({
   const [category,    setCategory]    = useState(expense.category);
   const [location,    setLocation]    = useState(expense.location ?? '');
   const [sharedPaid,  setSharedPaid]  = useState(expense.sharedPaid ?? false);
-  const [confirmDel,  setConfirmDel]  = useState(false);
+  const [confirmDel,   setConfirmDel]   = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   // Editable date — keep time from original, only change the date part
   const originalDate = new Date(expense.date);
-  const toInputValue = (d) => {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  };
-  const [dateInput, setDateInput] = useState(toInputValue(originalDate));
+  const [selectedDate, setSelectedDate] = useState(new Date(originalDate));
 
   const isShared = expense.type === 'compartido';
   const debtor   = expense.sharedWith?.trim();
@@ -72,11 +68,10 @@ export default function ExpenseEditSheet({
 
 
   /* Date / time display */
-  const recordDate = new Date(expense.date);
-  const dateStr = recordDate.toLocaleDateString('es-PE', {
+  const dateStr = selectedDate.toLocaleDateString('es-PE', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   });
-  const timeStr = recordDate.toLocaleTimeString('es-PE', {
+  const timeStr = originalDate.toLocaleTimeString('es-PE', {
     hour: '2-digit', minute: '2-digit',
   });
 
@@ -87,9 +82,8 @@ export default function ExpenseEditSheet({
     if (isNaN(parsed) || parsed <= 0) return;
 
     // Rebuild date preserving original time but with the new date part
-    const [y, m, d] = dateInput.split('-').map(Number);
     const newDate = new Date(originalDate);
-    newDate.setFullYear(y, m - 1, d);
+    newDate.setFullYear(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
 
     await onUpdate?.(expense.id, {
       amount:      parsed,
@@ -160,15 +154,9 @@ export default function ExpenseEditSheet({
 
       {/* ── Metadata card ── */}
       <div className="edit-info-card">
-        <div className="edit-info-row">
+        <div className="edit-info-row" onClick={() => setShowCalendar(true)} style={{ cursor: 'pointer' }}>
           <span className="edit-info-label">Fecha</span>
-          <input
-            className="edit-date-input"
-            type="date"
-            value={dateInput}
-            onChange={e => setDateInput(e.target.value)}
-            id="edit-date-field"
-          />
+          <span className="edit-info-value" style={{ textTransform: 'capitalize', color: 'var(--color-accent)' }}>{dateStr}</span>
         </div>
         <div className="edit-info-divider" />
         <div className="edit-info-row">
@@ -224,6 +212,14 @@ export default function ExpenseEditSheet({
       <button className="btn-primary" onClick={handleSave} id="btn-save-expense" style={{ marginTop: 16 }}>
         Guardar cambios
       </button>
+
+      {showCalendar && (
+        <CalendarModal
+          value={selectedDate}
+          onChange={date => setSelectedDate(date)}
+          onClose={() => setShowCalendar(false)}
+        />
+      )}
     </BaseSheet>
   );
 }
