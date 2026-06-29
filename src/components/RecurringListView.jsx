@@ -49,11 +49,19 @@ function scheduleLabel(rec) {
   return '';
 }
 
-function nextDueLabel(nextDueDate) {
+function nextDueLabel(nextDueDate, isSubscription = false) {
   if (!nextDueDate) return null;
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const due   = new Date(nextDueDate + 'T00:00:00');
   const diff  = Math.round((due - today) / 86400000);
+
+  if (isSubscription) {
+    if (diff < 0)  return { text: 'Cobro pendiente', urgent: true };
+    if (diff === 0) return { text: 'Cobro hoy', urgent: true };
+    if (diff === 1) return { text: 'Cobro mañana', urgent: true };
+    if (diff <= 7)  return { text: `Próximo cobro en ${diff} días`, urgent: true };
+    return { text: `Próximo cobro en ${diff} días`, urgent: false };
+  }
 
   if (diff < 0)  return { text: `Vence hace ${Math.abs(diff)} día${Math.abs(diff) !== 1 ? 's' : ''}`, urgent: true };
   if (diff === 0) return { text: 'Vence hoy', urgent: true };
@@ -112,7 +120,7 @@ function RecurringCard({ rec, onConfirm, onMarkDone, onEdit }) {
 }
 
 function SubscriptionCard({ rec, onEdit }) {
-  const dueLabel = nextDueLabel(rec.nextDueDate);
+  const dueLabel = nextDueLabel(rec.nextDueDate, true);
 
   return (
     <div className="rec-card" onClick={() => onEdit(rec)}>

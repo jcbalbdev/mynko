@@ -109,7 +109,7 @@ export default function EditRecurringSheet({ rec, onClose, onUpdate, onDelete, a
           <>
             <div className="edit-info-divider" />
             <div className="edit-info-row">
-              <span className="edit-info-label">Próximo vence</span>
+              <span className="edit-info-label">Próxima fecha</span>
               <span className="edit-info-value">
                 {new Date(rec.nextDueDate + 'T00:00:00').toLocaleDateString('es-PE', {
                   day: 'numeric', month: 'long', year: 'numeric',
